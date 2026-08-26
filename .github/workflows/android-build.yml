@@ -4,6 +4,8 @@ on:
   push:
     branches: [ main ]
     paths: [ 'android/smartscore/**', '.github/workflows/android-build.yml' ]
+  pull_request:
+    branches: [ main ]
 jobs:
   build:
     runs-on: ubuntu-latest
