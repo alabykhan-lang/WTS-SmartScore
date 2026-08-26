@@ -1,7 +1,7 @@
 package com.wts.smartscore.model
 
 enum class ScanMode { SMART_BROADSHEET, SCRIPT, GENERAL_DOCUMENT }
-enum class ScanState { SEARCHING, DOCUMENT_FOUND, ALIGN, MOVE_CLOSER, HOLD_STEADY, CAPTURING, SCANNED, WAITING_FOR_PAGE_EXIT }
+enum class ScanState { SEARCHING, DOCUMENT_FOUND, ALIGN, MOVE_CLOSER, MOVE_BACK, HOLD_STEADY, CAPTURING, SCANNED, WAITING_FOR_PAGE_EXIT }
 enum class ReadingState { CONFIRMED, REVIEW_REQUIRED, INVALID, BLANK, UNREADABLE, MANUALLY_CORRECTED }
 
 data class Assessment(val id:String,val label:String,val maximum:Double,val order:Int)
