@@ -10,8 +10,11 @@ data class Quad(
     val bl: PointF
 ) {
     fun area(): Float {
-        fun cross(a: PointF, b: PointF): Float = a.x * b.y - a.y * b.x
-        val twiceArea = cross(tl, tr) + cross(tr, br) + cross(br, bl) + cross(bl, tl)
+        val twiceArea =
+            (tl.x * tr.y - tl.y * tr.x) +
+            (tr.x * br.y - tr.y * br.x) +
+            (br.x * bl.y - br.y * bl.x) +
+            (bl.x * tl.y - bl.y * tl.x)
         return abs(twiceArea / 2f)
     }
 }
