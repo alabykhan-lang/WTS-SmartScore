@@ -1,0 +1,1 @@
+SmartScore V1 Android build validation.
