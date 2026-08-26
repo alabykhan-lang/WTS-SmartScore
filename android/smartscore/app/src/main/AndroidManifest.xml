@@ -1,0 +1,21 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="true" />
+    <application android:allowBackup="false" android:label="WTS SmartScore" android:theme="@style/Theme.WTSSmartScore" android:usesCleartextTraffic="false">
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
+        </provider>
+        <activity android:name=".ui.GeneralScannerActivity" android:exported="false" />
+        <activity android:name=".ui.ScriptScannerActivity" android:exported="false" />
+        <activity android:name=".ui.AiMarkerActivity" android:exported="false" />
+        <activity android:name=".ui.BroadsheetScannerActivity" android:exported="false" />
+        <activity android:name=".ui.MainActivity" android:screenOrientation="portrait" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

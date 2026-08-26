@@ -1,0 +1,28 @@
+These are PRE-SMARTSCORE SmartMark V2 physical-scan-fix reference APKs. They are not the final SmartScore V1 build and do not contain the new General Scanner / AI Marker home flow.
+
+WTS-SmartMark-V2-PhysicalScanFix-arm64-debug.apk
+bytes=51605058
+sha256=aec7b94573ba85ca6489ae641f298e1a2bf6381337cc34484e8b12d4eebc93bf
+size contributors (uncompressed):
+  lib: 40803096
+  classes.dex: 10491932
+  classes4.dex: 6848488
+  assets: 2437065
+  resources.arsc: 1156148
+  res: 591801
+  classes2.dex: 498596
+  classes3.dex: 164396
+
+WTS-SmartMark-V2-PhysicalScanFix-universal-debug.apk
+bytes=213677128
+sha256=966915cf643e83a0e24b00c7cf59f946506ffc630684013fa17af8e9ba0195e4
+size contributors (uncompressed):
+  lib: 202727444
+  classes.dex: 10491932
+  classes4.dex: 6848488
+  assets: 2437065
+  resources.arsc: 1156148
+  res: 591801
+  classes2.dex: 498596
+  classes3.dex: 164396
+

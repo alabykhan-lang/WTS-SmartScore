@@ -1,0 +1,42 @@
+name: Build SmartScore APKs
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths: [ 'android/smartscore/**', '.github/workflows/android-build.yml' ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Build and stage universal debug APK
+        working-directory: android/smartscore
+        run: |
+          gradle clean :app:assembleDebug
+          mkdir -p ../../dist
+          cp app/build/outputs/apk/debug/app-debug.apk ../../dist/WTS-SmartScore-V1-universal-debug.apk
+      - name: Build and stage ARM64 debug APK
+        working-directory: android/smartscore
+        run: |
+          gradle clean :app:assembleDebug -Parm64Only=true
+          ARM=$(find app/build/outputs/apk -type f -name '*.apk' | grep -E 'arm64-v8a|arm64' | head -1)
+          test -n "$ARM"
+          cp "$ARM" ../../dist/WTS-SmartScore-V1-arm64-debug.apk
+      - name: Hash and report APKs
+        run: |
+          sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
+          stat -c '%n %s bytes' dist/*.apk | tee dist/SIZES.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WTS-SmartScore-V1-APKs
+          path: dist/*
