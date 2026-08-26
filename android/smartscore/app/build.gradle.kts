@@ -17,6 +17,12 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = "17" }
+
     buildFeatures { viewBinding = true; buildConfig = true }
     packaging { resources.excludes += setOf("META-INF/AL2.0", "META-INF/LGPL2.1") }
 }
@@ -41,7 +47,6 @@ dependencies {
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }
 
-// Optional ARM64-only build: gradle :app:assembleDebug -Parm64Only=true
 android {
     splits {
         abi {
