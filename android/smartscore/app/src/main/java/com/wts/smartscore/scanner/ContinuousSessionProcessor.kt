@@ -1,7 +1,6 @@
 package com.wts.smartscore.scanner
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import com.wts.smartscore.data.ScriptEntity
 import com.wts.smartscore.data.ScriptPageEntity
 import com.wts.smartscore.data.SmartScoreDatabase
@@ -70,7 +69,7 @@ class ContinuousSessionProcessor(
     fun shutdown() = worker.shutdown()
 
     private fun processPage(index: Int, rawPath: String): PageResult {
-        val bitmap = requireNotNull(BitmapFactory.decodeFile(rawPath)) { "Unable to decode captured page" }
+        val bitmap = HighResImageLoader.load(rawPath)
         val normalized = try { ImageProcessor.normalize(bitmap) } finally { bitmap.recycle() }
         val out = File(corrected, "page-${index.toString().padStart(4, '0')}.jpg")
         ImageProcessor.saveJpeg(normalized, out)
