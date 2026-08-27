@@ -1,8 +1,11 @@
 package com.wts.smartscore.scanner
 
 import android.content.Context
+import com.wts.smartscore.data.BroadsheetEntity
+import com.wts.smartscore.data.ScanEntity
 import com.wts.smartscore.data.ScriptEntity
 import com.wts.smartscore.data.ScriptPageEntity
+import com.wts.smartscore.data.SheetSideEntity
 import com.wts.smartscore.data.SmartScoreDatabase
 import com.wts.smartscore.export.ImageZipExporter
 import com.wts.smartscore.export.PdfImageExporter
@@ -52,7 +55,9 @@ class ContinuousSessionProcessor(
     fun enqueue(index: Int, rawPath: String) {
         accepted.incrementAndGet()
         worker.execute {
-            val result = processPage(index, rawPath)
+            val result = runCatching { processPage(index, rawPath) }.getOrElse {
+                PageResult(index, rawPath, rawPath, "", "UNCERTAIN", null, null, null, true)
+            }
             synchronized(processed) { processed += result }
             val done = completed.incrementAndGet()
             onProgress(done, accepted.get())
@@ -74,7 +79,6 @@ class ContinuousSessionProcessor(
         val out = File(corrected, "page-${index.toString().padStart(4, '0')}.jpg")
         ImageProcessor.saveJpeg(normalized, out)
         val ocrText = runCatching { ScriptIdentityExtractor.extractText(context, out.absolutePath) }.getOrDefault("")
-
         val result = when (mode) {
             MODE_SCRIPT -> classifyScript(index, rawPath, out.absolutePath, ocrText)
             MODE_BROADSHEET -> classifyBroadsheet(index, rawPath, out.absolutePath, normalized, ocrText)
@@ -121,129 +125,88 @@ class ContinuousSessionProcessor(
             put("page_count", pages.size)
             put("processed_count", completed.get())
         }
-        val pageJson = JSONArray()
-        pages.forEach { p ->
-            pageJson.put(JSONObject().apply {
-                put("page_number", p.index)
-                put("original_path", p.rawPath)
-                put("corrected_path", p.correctedPath)
-                put("classification", p.pageClass)
-                put("uncertain", p.uncertain)
-                put("ocr_text", p.ocrText)
-                put("sheet_id", p.sheetId ?: JSONObject.NULL)
-                put("side_id", p.sideId ?: JSONObject.NULL)
-                p.identity?.let { put("identity", ScriptIdentityExtractor.toJson(it)) }
-            })
-        }
-        manifest.put("pages", pageJson)
-
+        manifest.put("pages", JSONArray(pages.map { p -> JSONObject().apply {
+            put("page_number", p.index); put("original_path", p.rawPath); put("corrected_path", p.correctedPath)
+            put("classification", p.pageClass); put("uncertain", p.uncertain); put("ocr_text", p.ocrText)
+            put("sheet_id", p.sheetId ?: JSONObject.NULL); put("side_id", p.sideId ?: JSONObject.NULL)
+            p.identity?.let { put("identity", ScriptIdentityExtractor.toJson(it)) }
+        }}))
         when (mode) {
             MODE_DOCUMENT -> buildDocumentExports(pages, manifest)
             MODE_SCRIPT -> buildScriptGroups(pages, manifest)
             MODE_BROADSHEET -> buildBroadsheetGroups(pages, manifest)
         }
-
-        val file = File(root, "session.json")
-        file.writeText(manifest.toString(2))
-        return file
+        return File(root, "session.json").also { it.writeText(manifest.toString(2)) }
     }
 
     private fun buildDocumentExports(pages: List<PageResult>, manifest: JSONObject) {
-        val paths = pages.map { it.correctedPath }
+        val paths = pages.map { it.correctedPath }.filter { File(it).exists() }
         if (paths.isEmpty()) return
         val pdf = File(root, "document-session.pdf")
         val zip = File(root, "document-pages.zip")
-        PdfImageExporter.export(pdf, paths)
-        ImageZipExporter.export(zip, paths)
-        manifest.put("pdf_path", pdf.absolutePath)
-        manifest.put("images_zip_path", zip.absolutePath)
+        PdfImageExporter.export(pdf, paths); ImageZipExporter.export(zip, paths)
+        manifest.put("pdf_path", pdf.absolutePath); manifest.put("images_zip_path", zip.absolutePath)
     }
 
     private fun buildScriptGroups(pages: List<PageResult>, manifest: JSONObject) {
         data class Group(val id: String, val pages: MutableList<PageResult> = mutableListOf(), var identity: ScriptIdentity? = null, var uncertainBoundary: Boolean = false)
-        val groups = mutableListOf<Group>()
-        var current: Group? = null
+        val groups = mutableListOf<Group>(); var current: Group? = null
         pages.forEach { page ->
             if (current == null || page.pageClass == "SCRIPT_COVER") {
-                current = Group(UUID.randomUUID().toString()).also { groups += it }
-                current!!.identity = page.identity
-            } else if (page.pageClass == "UNCERTAIN") {
-                current!!.uncertainBoundary = true
-            }
+                current = Group(UUID.randomUUID().toString()).also { groups += it }; current!!.identity = page.identity
+            } else if (page.pageClass == "UNCERTAIN") current!!.uncertainBoundary = true
             current!!.pages += page
             if (current!!.identity == null && page.identity != null) current!!.identity = page.identity
         }
-
-        val groupArray = JSONArray()
-        val exportRoot = File(root, "scripts").apply { mkdirs() }
-        val dao = SmartScoreDatabase.get(context).dao()
+        val groupArray = JSONArray(); val exportRoot = File(root, "scripts").apply { mkdirs() }; val dao = SmartScoreDatabase.get(context).dao()
         groups.forEachIndexed { i, g ->
-            val identity = g.identity
-            val display = identity?.displayStudent()?.takeIf { it.isNotBlank() } ?: "Unidentified ${i + 1}"
-            val safe = display.replace(Regex("[^A-Za-z0-9._ -]"), "_").trim().ifBlank { "script-${i + 1}" }
-            val dir = File(exportRoot, safe).apply { mkdirs() }
-            val paths = g.pages.map { it.correctedPath }
-            val pdf = File(dir, "script.pdf")
-            val zip = File(dir, "ai-package.zip")
-            val txt = File(dir, "ocr.txt")
-            val ocrJson = File(dir, "ocr.json")
-            PdfImageExporter.export(pdf, paths)
-            txt.writeText(g.pages.joinToString("\n\n") { "===== PAGE ${it.index} =====\n${it.ocrText}" })
-            ocrJson.writeText(JSONObject().apply {
-                put("script_id", g.id)
-                put("pages", JSONArray(g.pages.map { JSONObject().put("page_number", it.index).put("text", it.ocrText) }))
-            }.toString(2))
+            val identity = g.identity; val display = identity?.displayStudent()?.takeIf { it.isNotBlank() } ?: "Unidentified ${i + 1}"
+            val safe = display.replace(Regex("[^A-Za-z0-9._ -]"), "_").trim().ifBlank { "script-${i + 1}" }; val dir = File(exportRoot, safe).apply { mkdirs() }
+            val paths = g.pages.map { it.correctedPath }.filter { File(it).exists() }; val pdf = File(dir, "script.pdf"); val zip = File(dir, "ai-package.zip"); val txt = File(dir, "ocr.txt"); val ocrJson = File(dir, "ocr.json")
+            PdfImageExporter.export(pdf, paths); txt.writeText(g.pages.joinToString("\n\n") { "===== PAGE ${it.index} =====\n${it.ocrText}" })
+            ocrJson.writeText(JSONObject().apply { put("script_id", g.id); put("pages", JSONArray(g.pages.map { JSONObject().put("page_number", it.index).put("text", it.ocrText) })) }.toString(2))
             val metadata = JSONObject().apply {
-                put("script_id", g.id)
-                put("student_identity", identity?.let { ScriptIdentityExtractor.toJson(it) } ?: JSONObject.NULL)
-                put("subject", identity?.subject ?: JSONObject.NULL)
-                put("page_count", paths.size)
-                put("question_paper_reference", JSONObject.NULL)
-                put("marking_scheme_reference", JSONObject.NULL)
-                put("boundary_review_required", g.uncertainBoundary)
+                put("script_id", g.id); put("student_identity", identity?.let { ScriptIdentityExtractor.toJson(it) } ?: JSONObject.NULL); put("subject", identity?.subject ?: JSONObject.NULL); put("page_count", paths.size)
+                put("question_paper_reference", JSONObject.NULL); put("marking_scheme_reference", JSONObject.NULL); put("boundary_review_required", g.uncertainBoundary)
             }.toString(2)
             ImageZipExporter.export(zip, paths, metadata)
             runBlocking {
                 dao.saveScript(ScriptEntity(g.id, identity?.studentId ?: identity?.studentName, identity?.subject, identity?.examTitle, System.currentTimeMillis(), System.currentTimeMillis(), if (g.uncertainBoundary) "REVIEW_REQUIRED" else "COMPLETE", paths.size))
-                g.pages.forEachIndexed { pageIndex, p ->
-                    dao.saveScriptPage(ScriptPageEntity(UUID.randomUUID().toString(), g.id, pageIndex + 1, p.rawPath, p.correctedPath, System.currentTimeMillis()))
-                }
+                g.pages.forEachIndexed { pageIndex, p -> dao.saveScriptPage(ScriptPageEntity(UUID.randomUUID().toString(), g.id, pageIndex + 1, p.rawPath, p.correctedPath, System.currentTimeMillis())) }
             }
             groupArray.put(JSONObject().apply {
-                put("script_id", g.id)
-                put("display_name", display)
-                put("page_count", paths.size)
-                put("boundary_review_required", g.uncertainBoundary)
-                put("pdf_path", pdf.absolutePath)
-                put("ai_package_path", zip.absolutePath)
-                put("ocr_text_path", txt.absolutePath)
-                put("ocr_json_path", ocrJson.absolutePath)
+                put("script_id", g.id); put("display_name", display); put("page_count", paths.size); put("boundary_review_required", g.uncertainBoundary)
+                put("pdf_path", pdf.absolutePath); put("ai_package_path", zip.absolutePath); put("ocr_text_path", txt.absolutePath); put("ocr_json_path", ocrJson.absolutePath)
             })
         }
-        manifest.put("script_count", groups.size)
-        manifest.put("scripts", groupArray)
+        manifest.put("script_count", groups.size); manifest.put("scripts", groupArray)
     }
 
     private fun buildBroadsheetGroups(pages: List<PageResult>, manifest: JSONObject) {
-        val groups = linkedMapOf<String, MutableList<PageResult>>()
-        val uncertain = JSONArray()
-        pages.forEach { p ->
-            val key = p.sheetId
-            if (key == null) uncertain.put(p.index) else groups.getOrPut(key) { mutableListOf() }.add(p)
-        }
+        val groups = linkedMapOf<String, MutableList<PageResult>>(); val uncertain = JSONArray(); val dao = SmartScoreDatabase.get(context).dao(); val templates = V2TemplateRepository(context)
+        pages.forEach { p -> if (p.sheetId == null) uncertain.put(p.index) else groups.getOrPut(p.sheetId) { mutableListOf() }.add(p) }
         val arr = JSONArray()
         groups.forEach { (sheetId, ps) ->
             val sides = ps.mapNotNull { it.sideId?.substringAfterLast("-S")?.toIntOrNull() }.toSet()
+            var readingCount = 0; var exceptionCount = 0
+            ps.forEach { p ->
+                val side = p.sideId?.let { templates.sideById(it) } ?: return@forEach
+                val bitmap = runCatching { HighResImageLoader.load(p.correctedPath) }.getOrNull() ?: return@forEach
+                val scanId = UUID.randomUUID().toString()
+                val readings = try { BroadsheetProcessor(context).process(bitmap, side, scanId) } finally { bitmap.recycle() }
+                readingCount += readings.size; exceptionCount += readings.count { it.state != "CONFIRMED" && it.state != "BLANK" }
+                runBlocking {
+                    dao.saveBroadsheet(BroadsheetEntity(sheetId, templates.classLabel, templates.subject, templates.templateVersion, side.totalSides, if (exceptionCount > 0) "REVIEW_REQUIRED" else "SCANNED", System.currentTimeMillis()))
+                    dao.saveSide(SheetSideEntity(side.sideId, side.sheetId, side.sideNumber, side.totalSides, side.rowStart, side.rowEnd, System.currentTimeMillis(), p.rawPath, p.correctedPath, "CONTINUOUS_AUTO"))
+                    dao.saveScan(ScanEntity(scanId, side.sideId, "SMART_BROADSHEET", p.index, System.currentTimeMillis(), p.rawPath, p.correctedPath, "{}"))
+                    dao.deleteReadingsForSide(side.sideId); dao.saveReadings(readings)
+                }
+            }
             arr.put(JSONObject().apply {
-                put("sheet_id", sheetId)
-                put("pages", JSONArray(ps.map { it.index }))
-                put("side_1", 1 in sides)
-                put("side_2", 2 in sides)
-                put("status", if (1 in sides && 2 in sides) "COMPLETE" else "MISSING_SIDE")
+                put("sheet_id", sheetId); put("pages", JSONArray(ps.map { it.index })); put("side_1", 1 in sides); put("side_2", 2 in sides)
+                put("status", if (1 in sides && 2 in sides) "COMPLETE" else "MISSING_SIDE"); put("score_readings", readingCount); put("exceptions", exceptionCount)
             })
         }
-        manifest.put("broadsheet_count", groups.size)
-        manifest.put("broadsheets", arr)
-        manifest.put("uncertain_pages", uncertain)
+        manifest.put("broadsheet_count", groups.size); manifest.put("broadsheets", arr); manifest.put("uncertain_pages", uncertain)
     }
 }
