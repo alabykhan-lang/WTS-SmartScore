@@ -45,6 +45,7 @@ class ContinuousScanActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_MODE = "mode"
         const val EXTRA_DEBUG = "debug"
+        const val EXTRA_SESSION_ID = "session_id"
         private const val CAMERA_REQ = 6401
     }
 
@@ -76,10 +77,16 @@ class ContinuousScanActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         debugMode = BuildConfig.DEBUG && intent.getBooleanExtra(EXTRA_DEBUG, false)
         buildUi()
-        processor = ContinuousSessionProcessor(this, mode) { done, total ->
+        processor = ContinuousSessionProcessor(
+            this,
+            mode,
+            intent.getStringExtra(EXTRA_SESSION_ID) ?: java.util.UUID.randomUUID().toString()
+        ) { done, total ->
             processedCount = done
             runOnUiThread { processing.text = if (done < total) "Processing $done / $total" else "Processed $done" }
         }
+        pageCount = processor.existingPageCount()
+        counter.text = "Pages scanned: $pageCount"
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             initializeScanner()
         } else {
@@ -97,11 +104,7 @@ class ContinuousScanActivity : AppCompatActivity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(0xFF0C1320.toInt()) }
         val top = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setPadding(18, 20, 18, 14) }
         val heading = TextView(this).apply {
-            text = when (mode) {
-                ContinuousSessionProcessor.MODE_SCRIPT -> "CONTINUOUS SCRIPTS"
-                ContinuousSessionProcessor.MODE_BROADSHEET -> "CONTINUOUS BROADSHEETS"
-                else -> "CONTINUOUS DOCUMENTS"
-            }
+            text = "CONTINUOUS SCAN"
             textSize = 19f; setTextColor(0xFFFFFFFF.toInt()); gravity = Gravity.CENTER
             setOnLongClickListener {
                 if (!BuildConfig.DEBUG) return@setOnLongClickListener false
@@ -116,7 +119,7 @@ class ContinuousScanActivity : AppCompatActivity() {
             }
         }
         top.addView(heading)
-        counter = TextView(this).apply { text = "0 pages"; textSize = 34f; setTextColor(0xFFFFFFFF.toInt()); gravity = Gravity.CENTER }
+        counter = TextView(this).apply { text = "Pages scanned: 0"; textSize = 30f; setTextColor(0xFFFFFFFF.toInt()); gravity = Gravity.CENTER }
         top.addView(counter)
         status = TextView(this).apply { text = "STARTING CAMERA"; textSize = 17f; setTextColor(0xFF8FC3FF.toInt()); gravity = Gravity.CENTER; setPadding(0, 8, 0, 0) }
         top.addView(status)
@@ -231,7 +234,7 @@ class ContinuousScanActivity : AppCompatActivity() {
         ScanState.MOVE_BACK -> "MOVE BACK"
         ScanState.ALIGN -> "ADJUST DOCUMENT"
         ScanState.SCANNED -> "SCANNED ✓"
-        ScanState.WAITING_FOR_PAGE_EXIT -> "READY FOR NEXT — REMOVE PAGE"
+        ScanState.WAITING_FOR_PAGE_EXIT -> "READY FOR NEXT"
     }
 
     private fun diagnostics(a: com.wts.smartscore.scanner.FrameAssessment): String {
@@ -262,7 +265,7 @@ class ContinuousScanActivity : AppCompatActivity() {
                 processor.enqueue(next, raw.absolutePath)
                 feedback()
                 runOnUiThread {
-                    counter.text = "$pageCount pages"
+                    counter.text = "Pages scanned: $pageCount"
                     status.text = "SCANNED ✓"
                     processing.text = "Processing in background…"
                 }
@@ -290,6 +293,10 @@ class ContinuousScanActivity : AppCompatActivity() {
 
     private fun finishSession() {
         if (finishingSession) return
+        if (pageCount == 0) {
+            status.text = "NO PAGES CAPTURED"
+            return
+        }
         if (capturing.get()) {
             status.text = "SAVING LAST PAGE"
             Handler(Looper.getMainLooper()).postDelayed({ finishSession() }, 180)

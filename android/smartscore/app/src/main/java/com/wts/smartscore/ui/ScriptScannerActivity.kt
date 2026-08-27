@@ -17,6 +17,7 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.wts.smartscore.data.*
 import com.wts.smartscore.export.ImageZipExporter
 import com.wts.smartscore.export.PdfImageExporter
+import com.wts.smartscore.export.DocxExporter
 import com.wts.smartscore.scanner.MlKitDocumentScan
 import com.wts.smartscore.scanner.ScriptIdentity
 import com.wts.smartscore.scanner.ScriptIdentityExtractor
@@ -37,6 +38,8 @@ class ScriptScannerActivity : AppCompatActivity() {
     private lateinit var editIdentityButton: Button
     private lateinit var finishButton: Button
     private lateinit var openPdfButton: Button
+    private lateinit var openSearchablePdfButton: Button
+    private lateinit var openDocxButton: Button
     private lateinit var sharePackageButton: Button
     private lateinit var nextScriptButton: Button
 
@@ -122,6 +125,16 @@ class ScriptScannerActivity : AppCompatActivity() {
             visibility = View.GONE
             setOnClickListener { openExport("script-$scriptId.pdf", "application/pdf") }
         }
+        openSearchablePdfButton = Button(this).apply {
+            text = "OPEN SEARCHABLE PDF"
+            visibility = View.GONE
+            setOnClickListener { openExport("script-$scriptId-searchable.pdf", "application/pdf") }
+        }
+        openDocxButton = Button(this).apply {
+            text = "OPEN DOCX / WORD"
+            visibility = View.GONE
+            setOnClickListener { openExport("script-$scriptId.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document") }
+        }
         sharePackageButton = Button(this).apply {
             text = "SHARE AI-READY PACKAGE"
             visibility = View.GONE
@@ -135,7 +148,7 @@ class ScriptScannerActivity : AppCompatActivity() {
                 finish()
             }
         }
-        root.addView(openPdfButton); root.addView(sharePackageButton); root.addView(nextScriptButton)
+        root.addView(openPdfButton); root.addView(openSearchablePdfButton); root.addView(openDocxButton); root.addView(sharePackageButton); root.addView(nextScriptButton)
 
         setContentView(ScrollView(this).apply { addView(root) })
 
@@ -321,6 +334,11 @@ class ScriptScannerActivity : AppCompatActivity() {
             index + 1 to text
         }
         val plainText = texts.joinToString("\n\n") { (page, text) -> "===== PAGE $page =====\n$text" }
+        val identity = detectedIdentity ?: ScriptIdentityExtractor.read(identityFile())
+        val searchablePdf = File(dir, "script-$scriptId-searchable.pdf")
+        PdfImageExporter.exportSearchable(searchablePdf, paths.mapIndexed { index, path -> PdfImageExporter.OcrPage(path, texts[index].second) })
+        val docx = File(dir, "script-$scriptId.docx")
+        DocxExporter.export(docx, "${identity?.displayStudent() ?: "SmartScore"} script", texts)
         val ocrJson = JSONObject().apply {
             put("script_id", scriptId)
             put("pages", JSONArray().apply {
@@ -330,7 +348,6 @@ class ScriptScannerActivity : AppCompatActivity() {
         File(dir, "script-$scriptId.txt").writeText(plainText)
         File(dir, "script-$scriptId-ocr.json").writeText(ocrJson)
 
-        val identity = detectedIdentity ?: ScriptIdentityExtractor.read(identityFile())
         val metadata = JSONObject().apply {
             put("script_id", scriptId)
             put("student_identity", identity?.let { ScriptIdentityExtractor.toJson(it) } ?: JSONObject())
@@ -341,6 +358,8 @@ class ScriptScannerActivity : AppCompatActivity() {
             })
             put("ocr_text_file", "ocr.txt")
             put("ocr_json_file", "ocr.json")
+            put("searchable_pdf_file", searchablePdf.name)
+            put("docx_file", docx.name)
             put("question_paper_reference", JSONObject.NULL)
             put("marking_scheme_reference", JSONObject.NULL)
             put("ai_result_status", "NOT_MARKED")
@@ -362,6 +381,8 @@ class ScriptScannerActivity : AppCompatActivity() {
             rebuildExports()
             status.text = "Script complete ✓ — PDF, images, OCR text and AI-ready package are ready"
             openPdfButton.visibility = View.VISIBLE
+            openSearchablePdfButton.visibility = View.VISIBLE
+            openDocxButton.visibility = View.VISIBLE
             sharePackageButton.visibility = View.VISIBLE
             nextScriptButton.visibility = View.VISIBLE
             addPagesButton.isEnabled = true

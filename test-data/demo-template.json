@@ -1,1 +1,17 @@
-{"template_version":"1.0-personal","sheet_id":"WTS-SMARTSCORE-DEMO-0001","total_sides":2,"assessments":[{"id":"ca1","label":"CA1","max":10},{"id":"ca2","label":"CA2","max":10},{"id":"ca3","label":"CA3","max":10},{"id":"exam","label":"Exam","max":70}],"sides":[{"side_id":"WTS-SMARTSCORE-DEMO-0001-S1","side_number":1,"row_start":1,"row_end":2,"qr_optional":true,"rows":[{"row_no":1,"student_id":"TEST-STU-001","student_name":"Test Student 01"},{"row_no":2,"student_id":"TEST-STU-002","student_name":"Test Student 02"}]},{"side_id":"WTS-SMARTSCORE-DEMO-0001-S2","side_number":2,"row_start":3,"row_end":4,"qr_optional":true,"rows":[{"row_no":3,"student_id":"TEST-STU-003","student_name":"Test Student 03"},{"row_no":4,"student_id":"TEST-STU-004","student_name":"Test Student 04"}]}]}
+{
+  "schema_version": "3.0",
+  "template_version": "3.0-test-manifest",
+  "sheet_id": "WTS-SM-V2-DEMO-0001",
+  "class": "TEST SS1",
+  "subject_group": "Economics",
+  "layout_id": "secondary-economics-v3",
+  "layout_family": "SECONDARY_SINGLE_SUBJECT",
+  "session": "2026/2027",
+  "term": "FIRST",
+  "expected_page_ids": ["WTS-SM-V2-DEMO-0001-P1", "WTS-SM-V2-DEMO-0001-P2"],
+  "pages": [
+    {"page_id": "WTS-SM-V2-DEMO-0001-P1", "page_number": 1, "row_start": 1, "row_end": 15, "layout_id": "secondary-economics-v3", "layout_family": "SECONDARY_SINGLE_SUBJECT", "rows": []},
+    {"page_id": "WTS-SM-V2-DEMO-0001-P2", "page_number": 2, "row_start": 16, "row_end": 30, "layout_id": "secondary-economics-v3", "layout_family": "SECONDARY_SINGLE_SUBJECT", "rows": []}
+  ],
+  "qr_payload_example": {"v": 1, "s": "WTS-SM-V2-DEMO-0001", "p": "WTS-SM-V2-DEMO-0001-P1", "n": 1, "l": "secondary-economics-v3", "c": "TEST SS1", "u": "Economics", "t": "FIRST"}
+}

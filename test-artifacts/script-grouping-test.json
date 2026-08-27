@@ -1,0 +1,15 @@
+{
+  "scenario": "cover-continuation-boundary",
+  "pages": [
+    {"page_number": 1, "classification": "SCRIPT_COVER", "student_name": "ADEBAYO KHALID", "subject": "ECONOMICS"},
+    {"page_number": 2, "classification": "SCRIPT_CONTINUATION", "student_name": null, "subject": "ECONOMICS"},
+    {"page_number": 3, "classification": "SCRIPT_CONTINUATION", "student_name": null, "subject": "ECONOMICS"},
+    {"page_number": 4, "classification": "SCRIPT_COVER", "student_name": "BAKARE FATIHAT", "subject": "ECONOMICS"},
+    {"page_number": 5, "classification": "SCRIPT_CONTINUATION", "student_name": null, "subject": "ECONOMICS"},
+    {"page_number": 6, "classification": "UNCERTAIN", "student_name": "", "subject": "ECONOMICS", "boundary_review_required": true}
+  ],
+  "expected_groups": [
+    {"student_name": "ADEBAYO KHALID", "pages": [1, 2, 3]},
+    {"student_name": "BAKARE FATIHAT", "pages": [4, 5, 6], "boundary_review_required": true}
+  ]
+}

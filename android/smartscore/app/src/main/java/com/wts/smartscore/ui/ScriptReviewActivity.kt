@@ -11,6 +11,7 @@ import com.wts.smartscore.data.ScriptEntity
 import com.wts.smartscore.data.SmartScoreDatabase
 import com.wts.smartscore.export.ImageZipExporter
 import com.wts.smartscore.export.PdfImageExporter
+import com.wts.smartscore.export.DocxExporter
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.UUID
@@ -95,12 +96,15 @@ class ScriptReviewActivity : AppCompatActivity() {
                 setOnClickListener { startActivity(Intent(this@ScriptReviewActivity, ScriptScannerActivity::class.java).putExtra("scriptId", id)) }
             })
             root.addView(Button(this@ScriptReviewActivity).apply {
-                text = "EXPORT PDF + IMAGE ZIP"
+                text = "EXPORT PDF + DOCX + IMAGE ZIP"
                 setOnClickListener {
                     val paths = pages.map { it.normalizedPath ?: it.imagePath }
                     exec.execute {
                         val dir = File(filesDir, "exports")
                         PdfImageExporter.export(File(dir, "script-$id.pdf"), paths)
+                        val texts = paths.mapIndexed { index, path -> index + 1 to "Page ${index + 1}\n" + runCatching { com.wts.smartscore.scanner.ScriptIdentityExtractor.extractText(this@ScriptReviewActivity, path) }.getOrDefault("") }
+                        PdfImageExporter.exportSearchable(File(dir, "script-$id-searchable.pdf"), paths.mapIndexed { index, path -> PdfImageExporter.OcrPage(path, texts[index].second) })
+                        DocxExporter.export(File(dir, "script-$id.docx"), "${script.studentRef ?: "SmartScore"} script", texts)
                         ImageZipExporter.export(File(dir, "script-$id.zip"), paths, "{\"script_id\":\"$id\",\"page_count\":${paths.size}}")
                         runOnUiThread { Toast.makeText(this@ScriptReviewActivity, "Exports refreshed", Toast.LENGTH_LONG).show() }
                     }

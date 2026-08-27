@@ -1,1 +1,69 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","title":"WTS SmartScore Template","type":"object","required":["template_version","sheet_id","total_sides","sides"],"properties":{"template_version":{"type":"string"},"sheet_id":{"type":"string"},"total_sides":{"type":"integer","minimum":1},"assessments":{"type":"array","items":{"type":"object","required":["id","label","max"],"properties":{"id":{"type":"string"},"label":{"type":"string"},"max":{"type":"number","minimum":0}}}},"sides":{"type":"array","items":{"type":"object","required":["side_id","side_number","row_start","row_end","rows"],"properties":{"side_id":{"type":"string"},"side_number":{"type":"integer"},"row_start":{"type":"integer"},"row_end":{"type":"integer"},"qr_optional":{"type":"boolean"},"rows":{"type":"array"}}}}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WTS SmartScore Template Manifest",
+  "type": "object",
+  "required": ["schema_version", "template_version", "sheet_id", "layout_family", "pages"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "template_version": { "type": "string" },
+    "sheet_id": { "type": "string" },
+    "class": { "type": "string" },
+    "subject_group": { "type": "string" },
+    "session": { "type": ["string", "null"] },
+    "term": { "type": ["string", "null"] },
+    "layout_id": { "type": "string" },
+    "layout_family": { "enum": ["SECONDARY_SINGLE_SUBJECT", "PRIMARY_MULTI_SUBJECT", "NURSERY_MULTI_SUBJECT", "UNKNOWN"] },
+    "expected_page_ids": { "type": ["array", "null"], "items": { "type": "string" } },
+    "pages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["page_id", "page_number", "layout_id", "row_start", "row_end", "rows"],
+        "properties": {
+          "page_id": { "type": "string" },
+          "page_number": { "type": "integer", "minimum": 1 },
+          "expected_page_count": { "type": ["integer", "null"], "minimum": 1 },
+          "row_start": { "type": "integer", "minimum": 1 },
+          "row_end": { "type": "integer", "minimum": 1 },
+          "page_width": { "type": "number", "exclusiveMinimum": 0 },
+          "page_height": { "type": "number", "exclusiveMinimum": 0 },
+          "layout_id": { "type": "string" },
+          "layout_family": { "type": "string" },
+          "subject_group": { "type": "string" },
+          "template_version": { "type": "string" },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["row_no", "student_id", "student_name", "rois"],
+              "properties": {
+                "row_no": { "type": "integer", "minimum": 1 },
+                "student_id": { "type": "string" },
+                "student_name": { "type": "string" },
+                "rois": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["assessment_id", "maximum", "x", "y", "w", "h", "digit_boxes"],
+                    "properties": {
+                      "assessment_id": { "type": "string" },
+                      "label": { "type": ["string", "null"] },
+                      "subject_group": { "type": ["string", "null"] },
+                      "maximum": { "type": "number" },
+                      "x": { "type": "number" },
+                      "y": { "type": "number" },
+                      "w": { "type": "number", "exclusiveMinimum": 0 },
+                      "h": { "type": "number", "exclusiveMinimum": 0 },
+                      "digit_boxes": { "type": "array" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

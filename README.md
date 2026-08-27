@@ -1,23 +1,27 @@
-# WTS SmartScore
+# WTS SMARTSCORE
 
-Personal Android operational tool for automatic document scanning, Smart Broadsheet score digitization, full-script capture, AI-assisted marking proposals, offline review, and future read-only Result Portal integration.
+Smart Scanning • Score Capture • Script Digitization
 
-In a debug APK, long-press the continuous-scanner heading to show live diagnostics: oriented analysis size, detected polygon, coverage, page size, aspect ratio, blur, glare, stability and the exact capture-block reason. Normal user mode keeps these diagnostics hidden.
+WTS SmartScore is a local-first Android productivity tool for high-volume document capture, Smart Broadsheet score digitization, examination-script grouping, optional AI handoff and post-scan review.
 
-## V1 boundaries
-- Separate from the Result Portal repository.
-- No official Result Portal score writes.
-- No direct Supabase/database credentials in the APK.
-- No teacher onboarding/multi-tenant deployment.
-- AI marks are proposals requiring human review.
-- Result Portal connector is read-only and disabled until a secured endpoint is configured.
+## Current product boundary
+
+- Quick/Normal Scan uses Google ML Kit for one-to-few pages and manual review.
+- Continuous Scan captures a pile of pages without per-page dialogs, then opens a post-finish review session.
+- Smart Broadsheets use flexible `sheet_id`/`page_id` template manifests, optional QR identity and layout families including secondary single-subject and primary multi-subject sheets.
+- Scripts require no QR. Cover/continuation grouping and labelled OCR identity suggestions are reviewed after capture.
+- Exports include PDF, searchable PDF, corrected JPEG packages, TXT, OCR JSON, DOCX and structured CSV/XLSX where appropriate.
+- The Result Portal remains authoritative and is not modified by this repository. There are no production score writes or privileged database credentials.
+
+In a debug APK, long-press the Continuous Scan heading to show oriented analysis size, detected polygon, coverage, page size, aspect ratio, blur, glare, stability and the exact capture-block reason. Normal user mode keeps these diagnostics hidden.
 
 ## Modules
+
 - `android/smartscore`: Android application.
 - `scanner-core`: reusable scanning state/geometry contracts.
-- `shared/template-schema`: Smart Broadsheet template schema.
+- `shared/template-schema`: flexible Smart Broadsheet template schema.
 - `shared/score-batch-schema`: reviewed score export schema.
 - `shared/script-package-schema`: scanned script package schema.
-- `docs`: architecture, test plan and known limitations.
-- `test-data`: deterministic templates and example payloads.
-- `test-artifacts`: sample exports and visual verification material.
+- `docs`: architecture, test report and known limitations.
+- `test-data`: deterministic manifests and example payloads.
+- `test-artifacts`: invented paper PDFs and export/grouping fixtures.

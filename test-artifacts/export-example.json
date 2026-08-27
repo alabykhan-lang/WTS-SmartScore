@@ -1,0 +1,13 @@
+{
+  "schema_version": "3.0",
+  "script_id": "TEST-SCRIPT-001",
+  "student_identity": {"student_name": "ADEBAYO KHALID", "student_id": "TEST-SS1-001", "class": "TEST SS1", "subject": "ECONOMICS"},
+  "pages": [
+    {"page_id": "TEST-SCRIPT-001-P1", "page_number": 1, "image": "pages/page-001.jpg", "ocr_text": "STUDENT NAME: ADEBAYO KHALID\nSUBJECT: ECONOMICS"},
+    {"page_id": "TEST-SCRIPT-001-P2", "page_number": 2, "image": "pages/page-002.jpg", "ocr_text": "Question 4. Explain the law of demand."}
+  ],
+  "completion_state": "COMPLETE",
+  "boundary_review_required": false,
+  "question_paper_reference": null,
+  "marking_scheme_reference": null
+}

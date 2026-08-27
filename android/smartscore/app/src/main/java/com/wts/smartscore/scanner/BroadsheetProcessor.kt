@@ -15,7 +15,7 @@ import java.util.UUID
 
 class BroadsheetProcessor(private val context:Context){
  data class Digit(val value:Int?,val confidence:Double,val blank:Boolean,val cropPath:String?)
- fun process(bitmap:Bitmap,side:SideTemplateDef,scanId:String):List<ScoreReadingEntity>{
+ fun process(bitmap:Bitmap,side:SheetPageTemplate,scanId:String):List<ScoreReadingEntity>{
   val recognizer=TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
   return try{side.rows.flatMap{row->row.rois.map{roi->
    val digits=roi.digitBoxes.sortedBy{it.index}.map{recognizeDigit(bitmap,side,it,recognizer,row.rowNo,roi.assessmentId)}
@@ -23,7 +23,7 @@ class BroadsheetProcessor(private val context:Context){
    ScoreReadingEntity(UUID.randomUUID().toString(),side.sheetId,side.sideId,scanId,row.studentId,row.studentName,roi.assessmentId,roi.maximum,value,value,confidence,state,digits.firstOrNull{it.cropPath!=null}?.cropPath,null)
   }}}finally{recognizer.close()}
  }
- private fun recognizeDigit(page:Bitmap,side:SideTemplateDef,b:DigitBoxDef,recognizer:com.google.mlkit.vision.text.TextRecognizer,row:Int,assessment:String):Digit{
+ private fun recognizeDigit(page:Bitmap,side:SheetPageTemplate,b:DigitBoxDef,recognizer:com.google.mlkit.vision.text.TextRecognizer,row:Int,assessment:String):Digit{
   val x=(b.x/side.pageW*page.width).toInt().coerceIn(0,page.width-2);val y=((side.pageH-(b.y+b.h))/side.pageH*page.height).toInt().coerceIn(0,page.height-2)
   val w=(b.w/side.pageW*page.width).toInt().coerceIn(2,page.width-x);val h=(b.h/side.pageH*page.height).toInt().coerceIn(2,page.height-y)
   val crop=Bitmap.createBitmap(page,x,y,w,h);val mx=(w*0.12).toInt();val my=(h*0.12).toInt();val iw=(w-2*mx).coerceAtLeast(1);val ih=(h-2*my).coerceAtLeast(1);val inner=Bitmap.createBitmap(crop,mx.coerceAtMost(w-1),my.coerceAtMost(h-1),iw.coerceAtMost(w-mx),ih.coerceAtMost(h-my));crop.recycle()

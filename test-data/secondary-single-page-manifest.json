@@ -1,0 +1,23 @@
+{
+  "schema_version": "3.0",
+  "template_version": "3.0-test-manifest",
+  "sheet_id": "WTS-SS-SECONDARY-ONE-001",
+  "class": "TEST JSS1",
+  "subject_group": "English Language",
+  "layout_id": "secondary-english-v3",
+  "layout_family": "SECONDARY_SINGLE_SUBJECT",
+  "session": "2026/2027",
+  "term": "FIRST",
+  "expected_page_ids": ["WTS-SS-SECONDARY-ONE-001-P1"],
+  "pages": [
+    {
+      "page_id": "WTS-SS-SECONDARY-ONE-001-P1",
+      "page_number": 1,
+      "row_start": 1,
+      "row_end": 8,
+      "layout_id": "secondary-english-v3",
+      "layout_family": "SECONDARY_SINGLE_SUBJECT",
+      "rows": [{"row_no": 1, "student_id": "TEST-STU-001", "student_name": "Adigun Bazim", "roi_geometry": {"ca1": {"x": 340.16, "y": 407.2, "w": 72.54, "h": 24.66}, "ca2": {"x": 416.7, "y": 407.2, "w": 72.54, "h": 24.66}, "ca3": {"x": 493.24, "y": 407.2, "w": 72.54, "h": 24.66}, "exam": {"x": 569.78, "y": 407.2, "w": 89.54, "h": 24.66}}}]
+    }
+  ]
+}

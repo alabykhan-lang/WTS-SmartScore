@@ -1,19 +1,19 @@
 # Implementation status
 
-## Implemented in the separate WTS-SmartScore source package
-- Dedicated repository layout; no Result Portal scanner code added.
-- Home navigation for Smart Broadsheet, Script Scanner, AI Marker, General Document Scanner, saved-work areas.
-- Reusable CameraX/OpenCV automatic capture engine with SEARCHING -> FOUND/ALIGN/MOVE CLOSER -> HOLD STEADY -> internal capture -> beep/vibration -> wait-for-page-exit -> re-arm.
-- General document path with edge detection, perspective normalization, enhancement and multipage PDF export.
-- Smart Broadsheet data contracts, optional QR identity design, exact ROI numeric-recognition contract, confidence/review states and raw-vs-reviewed values.
-- Room persistence for broadsheets, sides, scans, score readings, corrections, scripts, script pages, AI proposals and exports.
-- Full Script automatic capture flow and ordered page storage.
-- AI provider abstraction with mandatory human-review semantics and no API key in the APK source.
-- Read-only Result Portal client allow-list; no official score-write method.
-- JSON/CSV score exports, script package schema and deterministic scan fixtures.
+## Implemented in WTS SmartScore
 
-## Build blocker in this execution environment
-A final SmartScore APK could not be compiled here because the active container has Java/Kotlin but no Android SDK, Android Build Tools or Gradle dependency cache, and outbound build-tool downloads are unavailable. Existing SmartMark V2 APKs in the workspace prove the earlier source was built elsewhere, but re-labeling those as SmartScore V1 would be inaccurate because they predate the new General Scanner and AI Marker flow.
+- Continuous Scan captures high-resolution stills in one uninterrupted session, beeps/vibrates, counts pages, prevents duplicates until page exit, and defers review until Finish.
+- Continuous diagnostics are available in debug mode without exposing engineering terms in normal user mode.
+- Quick/Normal Scan remains the Google ML Kit Document Scanner path.
+- Smart Broadsheet uses flexible `sheet_id`/`page_id` manifests with dynamic or known page counts; no fixed duplex completion rule remains.
+- Local invented templates cover secondary single-subject, one-page, large three-page and primary four-subject layouts. QR payloads carry page identity and sit in the generated test header's top-centre zone; QR failure preserves the page.
+- Compact broadsheet grid review shows normal values quietly and emphasizes only review/invalid/unreadable states with source-crop correction dialogs.
+- Script pages are QR-free. Labelled OCR fields and cover structure drive cover/continuation/uncertain classification; continuous sessions group covers and continuations after capture.
+- Post-session review supports page thumbnails, inspect, rotate, crop, reorder, delete, add/rescan and reprocess.
+- Exports include regular/searchable PDF, corrected JPEG packages, TXT, OCR JSON, DOCX and score CSV/XLSX where structured extraction is available. Script AI ZIPs preserve ordered pages, metadata and OCR.
+- Room migration preserves the existing local database while adding page/layout/manifest metadata.
+- Result Portal code and production data are untouched; no score-write path or privileged credential is present.
 
-## Required final build step
-Create the empty `alabykhan-lang/WTS-SmartScore` GitHub repository (or otherwise provide a remote repository that is not the Result Portal). The source package is ready to push. A GitHub Actions Android build can then produce universal and ARM64 APK artifacts without using the Result Portal repository.
+## Verification status
+
+Desktop artifact QA passed for the generated PDF, DOCX, OCR JSON/TXT and XLSX examples. The Android source is built by GitHub Actions on push to `main`. Physical camera, handwritten OCR and full-device interaction remain pending installation of the resulting ARM64 APK; CI success alone is not a physical acceptance claim.

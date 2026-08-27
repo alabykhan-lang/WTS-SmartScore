@@ -1,10 +1,10 @@
 # Known limitations
 
-- No APK was produced in this environment because Android SDK/Build Tools/Gradle are absent and external downloads are blocked.
-- Runtime camera/OpenCV behavior has not been re-validated on a physical phone in this build session.
-- The numeric recognizer contract is present, but V1 source package does not bundle a trained handwritten digit model. A provider/model must be plugged into `NumericRecognizer`; uncertain values must remain review-required.
-- Perspective normalization/enhancement contracts and detector are implemented at source level; final production tuning needs device images.
-- General scanner OCR/searchable PDF is optional and not implemented in this source package.
-- AI provider connectors are abstracted but no secret-bearing provider is bundled.
-- Result Portal read-only endpoint `/api/smartscore-read/*` is future-facing and has not been added to production.
-- No official Result Portal score writes exist.
+- The ARM64 APK still requires the user's physical phone test; camera boundary acceptance and capture cadence are not claimed as physically proven by CI.
+- Local manifests are invented test data. Result Portal roster/template connectivity is intentionally not enabled in this phase.
+- The current score recognizer is a best-effort ML Kit numeric OCR path with blank/invalid/confidence states. Small handwritten primary cells may require review; corrected page images remain authoritative.
+- QR is optional identity evidence. A QR miss preserves the page, but unknown page identity still requires post-session review.
+- DOCX and searchable PDF exports are best-effort OCR/layout reconstructions. Searchable PDF text is a derived layer; it does not replace source images.
+- CSV/XLSX exports are reliable for structured score rows, not arbitrary handwritten document reconstruction.
+- Crop/rotate/reorder/delete edits are local post-capture operations and should be followed by Process before relying on derived OCR/grouping artifacts.
+- No official Result Portal write API, production roster sync, service-role key or autonomous score submission exists.

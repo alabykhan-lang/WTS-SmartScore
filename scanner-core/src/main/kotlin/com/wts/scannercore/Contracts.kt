@@ -4,4 +4,4 @@ enum class ScannerStatus { SEARCHING, DOCUMENT_FOUND, ALIGN, MOVE_CLOSER, HOLD_S
 data class NormalizedPage(val scanId:String,val originalPath:String,val normalizedPath:String,val width:Int,val height:Int,val capturedAt:Long)
 interface DocumentScanner { suspend fun normalize(sourcePath:String):NormalizedPage }
 interface PageIdentityResolver { suspend fun resolve(page:NormalizedPage):PageIdentity? }
-data class PageIdentity(val sheetId:String?,val sideId:String?,val method:String,val confidence:Double)
+data class PageIdentity(val sheetId:String?,val pageId:String?,val method:String,val confidence:Double,val pageNumber:Int?=null,val layoutId:String?=null)

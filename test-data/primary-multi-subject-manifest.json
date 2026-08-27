@@ -1,0 +1,25 @@
+{
+  "schema_version": "3.0",
+  "template_version": "3.0-test-manifest",
+  "sheet_id": "WTS-SS-PRIMARY-MULTI-001",
+  "class": "TEST PRIMARY 4",
+  "subject_group": "English • Mathematics • Basic Science • Social Studies",
+  "layout_id": "primary-four-subject-v1",
+  "layout_family": "PRIMARY_MULTI_SUBJECT",
+  "session": "2026/2027",
+  "term": "FIRST",
+  "expected_page_ids": ["WTS-SS-PRIMARY-MULTI-001-P1"],
+  "pages": [
+    {
+      "page_id": "WTS-SS-PRIMARY-MULTI-001-P1",
+      "page_number": 1,
+      "row_start": 1,
+      "row_end": 12,
+      "layout_id": "primary-four-subject-v1",
+      "layout_family": "PRIMARY_MULTI_SUBJECT",
+      "subject_groups": ["English", "Mathematics", "Basic Science", "Social Studies"],
+      "assessment_groups": ["CA", "EXAM"],
+      "rows": [{"row_no": 1, "student_id": "TEST-PRI-001", "student_name": "Aisha Bello", "roi_geometry": {"english_ca": {"x": 215.43, "y": 387.19, "w": 44.19, "h": 25}, "english_exam": {"x": 263.62, "y": 387.19, "w": 44.19, "h": 25}, "mathematics_ca": {"x": 311.81, "y": 387.19, "w": 44.19, "h": 25}, "mathematics_exam": {"x": 360.0, "y": 387.19, "w": 44.19, "h": 25}, "basic_science_ca": {"x": 408.19, "y": 387.19, "w": 44.19, "h": 25}, "basic_science_exam": {"x": 456.38, "y": 387.19, "w": 44.19, "h": 25}, "social_studies_ca": {"x": 504.57, "y": 387.19, "w": 44.19, "h": 25}, "social_studies_exam": {"x": 552.76, "y": 387.19, "w": 44.19, "h": 25}}}]
+    }
+  ]
+}

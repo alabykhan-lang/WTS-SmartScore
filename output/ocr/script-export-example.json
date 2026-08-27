@@ -1,0 +1,15 @@
+{
+  "script_id": "TEST-SCRIPT-001",
+  "pages": [
+    {
+      "page_number": 1,
+      "image": "pages/page-001.jpg",
+      "text": "STUDENT NAME: ADEBAYO KHALID"
+    },
+    {
+      "page_number": 2,
+      "image": "pages/page-002.jpg",
+      "text": "Question 4. Explain the law of demand."
+    }
+  ]
+}
