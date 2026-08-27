@@ -2,6 +2,8 @@
 
 Personal Android operational tool for automatic document scanning, Smart Broadsheet score digitization, full-script capture, AI-assisted marking proposals, offline review, and future read-only Result Portal integration.
 
+In a debug APK, long-press the continuous-scanner heading to show live diagnostics: oriented analysis size, detected polygon, coverage, page size, aspect ratio, blur, glare, stability and the exact capture-block reason. Normal user mode keeps these diagnostics hidden.
+
 ## V1 boundaries
 - Separate from the Result Portal repository.
 - No official Result Portal score writes.

@@ -22,23 +22,27 @@ class DocumentGuideOverlay @JvmOverloads constructor(
     private var sourceWidth = 1f
     private var sourceHeight = 1f
 
-    fun show(q: Quad?, imageWidth: Int, imageHeight: Int) {
+    fun show(q: Quad?, imageWidth: Int, imageHeight: Int, positive: Boolean = false) {
         quad = q
         sourceWidth = imageWidth.coerceAtLeast(1).toFloat()
         sourceHeight = imageHeight.coerceAtLeast(1).toFloat()
+        paint.color = if (positive) 0xFF42D392.toInt() else 0xFF62A8FF.toInt()
         postInvalidateOnAnimation()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val q = quad ?: return
-        val sx = width / sourceWidth
-        val sy = height / sourceHeight
+        // PreviewView.ScaleType.FIT_CENTER letterboxes the camera frame. Applying
+        // independent sx/sy values would stretch the outline away from the paper.
+        val scale = minOf(width / sourceWidth, height / sourceHeight)
+        val dx = (width - sourceWidth * scale) / 2f
+        val dy = (height - sourceHeight * scale) / 2f
         val p = Path().apply {
-            moveTo(q.tl.x * sx, q.tl.y * sy)
-            lineTo(q.tr.x * sx, q.tr.y * sy)
-            lineTo(q.br.x * sx, q.br.y * sy)
-            lineTo(q.bl.x * sx, q.bl.y * sy)
+            moveTo(dx + q.tl.x * scale, dy + q.tl.y * scale)
+            lineTo(dx + q.tr.x * scale, dy + q.tr.y * scale)
+            lineTo(dx + q.br.x * scale, dy + q.br.y * scale)
+            lineTo(dx + q.bl.x * scale, dy + q.bl.y * scale)
             close()
         }
         canvas.drawPath(p, paint)

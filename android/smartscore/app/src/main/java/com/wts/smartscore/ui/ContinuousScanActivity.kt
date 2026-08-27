@@ -12,7 +12,9 @@ import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Size
 import android.view.Gravity
+import android.view.Surface
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
@@ -29,6 +31,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.wts.smartscore.BuildConfig
 import com.wts.smartscore.model.ScanState
 import com.wts.smartscore.scanner.AutoCaptureController
 import com.wts.smartscore.scanner.ContinuousSessionProcessor
@@ -41,6 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ContinuousScanActivity : AppCompatActivity() {
     companion object {
         const val EXTRA_MODE = "mode"
+        const val EXTRA_DEBUG = "debug"
         private const val CAMERA_REQ = 6401
     }
 
@@ -49,6 +53,7 @@ class ContinuousScanActivity : AppCompatActivity() {
     private lateinit var status: TextView
     private lateinit var counter: TextView
     private lateinit var processing: TextView
+    private lateinit var debugMetrics: TextView
     private lateinit var pauseButton: Button
     private lateinit var imageCapture: ImageCapture
     private lateinit var processor: ContinuousSessionProcessor
@@ -62,11 +67,14 @@ class ContinuousScanActivity : AppCompatActivity() {
     private var finishingSession = false
     private var pageCount = 0
     private var processedCount = 0
+    private var debugMode = false
+    @Volatile private var lastAnalysisError: String? = null
     private val tone by lazy { ToneGenerator(AudioManager.STREAM_NOTIFICATION, 90) }
     private val mode by lazy { intent.getStringExtra(EXTRA_MODE) ?: ContinuousSessionProcessor.MODE_DOCUMENT }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        debugMode = BuildConfig.DEBUG && intent.getBooleanExtra(EXTRA_DEBUG, false)
         buildUi()
         processor = ContinuousSessionProcessor(this, mode) { done, total ->
             processedCount = done
@@ -88,23 +96,47 @@ class ContinuousScanActivity : AppCompatActivity() {
     private fun buildUi() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(0xFF0C1320.toInt()) }
         val top = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER; setPadding(18, 20, 18, 14) }
-        top.addView(TextView(this).apply {
+        val heading = TextView(this).apply {
             text = when (mode) {
                 ContinuousSessionProcessor.MODE_SCRIPT -> "CONTINUOUS SCRIPTS"
                 ContinuousSessionProcessor.MODE_BROADSHEET -> "CONTINUOUS BROADSHEETS"
                 else -> "CONTINUOUS DOCUMENTS"
             }
             textSize = 19f; setTextColor(0xFFFFFFFF.toInt()); gravity = Gravity.CENTER
-        })
+            setOnLongClickListener {
+                if (!BuildConfig.DEBUG) return@setOnLongClickListener false
+                debugMode = !debugMode
+                debugMetrics.visibility = if (debugMode) View.VISIBLE else View.GONE
+                Toast.makeText(
+                    this@ContinuousScanActivity,
+                    if (debugMode) "Scanner diagnostics ON" else "Scanner diagnostics OFF",
+                    Toast.LENGTH_SHORT
+                ).show()
+                true
+            }
+        }
+        top.addView(heading)
         counter = TextView(this).apply { text = "0 pages"; textSize = 34f; setTextColor(0xFFFFFFFF.toInt()); gravity = Gravity.CENTER }
         top.addView(counter)
         status = TextView(this).apply { text = "STARTING CAMERA"; textSize = 17f; setTextColor(0xFF8FC3FF.toInt()); gravity = Gravity.CENTER; setPadding(0, 8, 0, 0) }
         top.addView(status)
         processing = TextView(this).apply { text = ""; textSize = 12f; setTextColor(0xFFAAB5C5.toInt()); gravity = Gravity.CENTER }
         top.addView(processing)
+        debugMetrics = TextView(this).apply {
+            text = ""
+            textSize = 11f
+            setTextColor(0xFF9FE8C0.toInt())
+            gravity = Gravity.CENTER
+            setPadding(0, 8, 0, 0)
+            visibility = if (debugMode) View.VISIBLE else View.GONE
+        }
+        top.addView(debugMetrics)
         root.addView(top)
 
-        preview = PreviewView(this).apply { scaleType = PreviewView.ScaleType.FIT_CENTER }
+        preview = PreviewView(this).apply {
+            scaleType = PreviewView.ScaleType.FIT_CENTER
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+        }
         overlay = DocumentGuideOverlay(this)
         val cameraFrame = FrameLayout(this).apply {
             addView(preview, FrameLayout.LayoutParams(-1, -1))
@@ -138,29 +170,50 @@ class ContinuousScanActivity : AppCompatActivity() {
         val future = ProcessCameraProvider.getInstance(this)
         future.addListener({
             val provider = future.get(); cameraProvider = provider
-            val previewUseCase = Preview.Builder().build().also { it.setSurfaceProvider(preview.surfaceProvider) }
+            val targetRotation = preview.display?.rotation ?: Surface.ROTATION_0
+            val previewUseCase = Preview.Builder()
+                .setTargetRotation(targetRotation)
+                .build()
+                .also { it.setSurfaceProvider(preview.surfaceProvider) }
             imageCapture = ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setJpegQuality(95)
+                .setTargetRotation(targetRotation)
                 .build()
             val analysis = ImageAnalysis.Builder()
+                .setTargetResolution(Size(1280, 720))
+                .setTargetRotation(targetRotation)
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
             analysis.setAnalyzer(analysisExecutor) { image ->
                 try {
                     if (paused || finishingSession || !OpenCvRuntime.isReady()) return@setAnalyzer
                     val mat = ImageProxyTools.lumaMat(image)
-                    val assessment = detector.detect(mat)
-                    mat.release()
-                    runOnUiThread { overlay.show(assessment.quad, image.width, image.height) }
-                    if (controller.onFrame(assessment)) {
-                        runOnUiThread { status.text = "HOLD STEADY" }
-                        capturePage(false)
-                    } else {
-                        runOnUiThread { status.text = friendly(controller.state) }
+                    val assessment = try {
+                        detector.detect(mat, image.imageInfo.rotationDegrees)
+                    } finally {
+                        mat.release()
                     }
-                } catch (_: Throwable) {
-                    runOnUiThread { status.text = "FIND DOCUMENT" }
+                    val shouldCapture = controller.onFrame(assessment)
+                    runOnUiThread {
+                        overlay.show(
+                            assessment.quad,
+                            assessment.frameWidth,
+                            assessment.frameHeight,
+                            positive = controller.state == ScanState.DOCUMENT_FOUND || controller.state == ScanState.CAPTURING
+                        )
+                        status.text = friendly(controller.state)
+                        if (debugMode) debugMetrics.text = diagnostics(assessment)
+                    }
+                    if (shouldCapture) {
+                        capturePage(false)
+                    }
+                } catch (t: Throwable) {
+                    lastAnalysisError = "${t.javaClass.simpleName}: ${t.message ?: "analysis error"}"
+                    runOnUiThread {
+                        status.text = "FIND DOCUMENT"
+                        if (debugMode) debugMetrics.text = "ANALYSIS ERROR\n${lastAnalysisError}"
+                    }
                 } finally {
                     image.close()
                 }
@@ -179,6 +232,21 @@ class ContinuousScanActivity : AppCompatActivity() {
         ScanState.ALIGN -> "ADJUST DOCUMENT"
         ScanState.SCANNED -> "SCANNED ✓"
         ScanState.WAITING_FOR_PAGE_EXIT -> "READY FOR NEXT — REMOVE PAGE"
+    }
+
+    private fun diagnostics(a: com.wts.smartscore.scanner.FrameAssessment): String {
+        fun pct(value: Float) = String.format(java.util.Locale.US, "%.1f%%", value * 100f)
+        fun number(value: Double) = String.format(java.util.Locale.US, "%.1f", value)
+        return buildString {
+            append("frame=${a.frameWidth}×${a.frameHeight} rot=${a.rotationDegrees}° ")
+            append("quad=${if (a.quad == null) "NO" else "YES"} method=${a.detectorMethod}\n")
+            append("coverage=${pct(a.coverage)} size=${pct(a.pageWidthFraction)}×${pct(a.pageHeightFraction)} ")
+            append("aspect=${number(a.aspectRatio.toDouble())}:1 edge=${pct(a.edgeMargin)}\n")
+            append("blur=${number(a.blurScore)} glare=${number(a.glare)} ")
+            append("stability=${number(a.stabilityScore.toDouble())} stable=${a.stable}\n")
+            append("block=${controller.blockReason}")
+            lastAnalysisError?.let { append("\nerror=$it") }
+        }
     }
 
     private fun capturePage(manual: Boolean) {
