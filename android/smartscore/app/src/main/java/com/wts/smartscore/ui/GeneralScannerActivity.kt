@@ -24,7 +24,7 @@ class GeneralScannerActivity : AppCompatActivity() {
 
     private val launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { activityResult ->
         if (activityResult.resultCode != Activity.RESULT_OK) {
-            status.text = "Scan cancelled — tap SCAN DOCUMENT when ready"
+            status.text = "Scan cancelled — tap Scan Document when ready"
             return@registerForActivityResult
         }
         try {
@@ -42,14 +42,19 @@ class GeneralScannerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(20, 24, 20, 20)
+            setPadding(22, 28, 22, 22)
         }
-        root.addView(TextView(this).apply { text = "GENERAL DOCUMENT SCANNER"; textSize = 22f })
+        root.addView(TextView(this).apply { text = "Document Scanner"; textSize = 26f })
+        root.addView(TextView(this).apply {
+            text = "Scan ordinary documents to clean corrected pages and a multipage PDF."
+            textSize = 14f
+            setPadding(0, 6, 0, 18)
+        })
         status = TextView(this).apply {
             text = "Opening document scanner…"
             textSize = 16f
             gravity = Gravity.CENTER
-            setPadding(0, 20, 0, 20)
+            setPadding(0, 18, 0, 18)
         }
         root.addView(status)
         root.addView(Button(this).apply { text = "SCAN DOCUMENT"; setOnClickListener { startScan() } })
@@ -62,7 +67,7 @@ class GeneralScannerActivity : AppCompatActivity() {
         }
         root.addView(openPdf)
         root.addView(TextView(this).apply {
-            text = "Use the scanner to capture and review all pages, then tap Done. SmartScore keeps the corrected JPEG pages and PDF."
+            text = "Capture and review all pages inside the scanner, then tap Done. SmartScore keeps the corrected JPEG pages and PDF locally."
             setPadding(0, 16, 0, 0)
         })
         setContentView(ScrollView(this).apply { addView(root) })
@@ -88,7 +93,7 @@ class GeneralScannerActivity : AppCompatActivity() {
             box.addView(TextView(this).apply { text = "Page ${page.pageNumber}"; gravity = Gravity.CENTER })
             thumbs.addView(box)
         }
-        status.text = "SCANNED ✓ — ${scan.pageCount} page${if (scan.pageCount == 1) "" else "s"}"
+        status.text = "Scanned ✓ — ${scan.pageCount} page${if (scan.pageCount == 1) "" else "s"}"
         openPdf.isEnabled = scan.pdfPath != null
     }
 
