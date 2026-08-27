@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.Flow
  @Query("SELECT * FROM scripts WHERE scriptId=:scriptId LIMIT 1") suspend fun script(scriptId:String):ScriptEntity?
  @Query("SELECT * FROM script_pages WHERE scriptId=:scriptId ORDER BY pageNumber") suspend fun scriptPages(scriptId:String):List<ScriptPageEntity>
  @Query("DELETE FROM script_pages WHERE pageId=:pageId") suspend fun deleteScriptPage(pageId:String)
+ @Query("DELETE FROM scripts WHERE scriptId=:scriptId") suspend fun deleteScript(scriptId:String)
  @Query("UPDATE script_pages SET pageNumber=:pageNumber WHERE pageId=:pageId") suspend fun setPageNumber(pageId:String,pageNumber:Int)
+ @Query("UPDATE script_pages SET scriptId=:targetScriptId,pageNumber=:pageNumber WHERE pageId=:pageId") suspend fun moveScriptPage(pageId:String,targetScriptId:String,pageNumber:Int)
  @Query("UPDATE score_readings SET reviewedValue=:value,state='MANUALLY_CORRECTED',reviewedAt=:now WHERE id=:id") suspend fun correctReading(id:String,value:Double?,now:Long)
 }
