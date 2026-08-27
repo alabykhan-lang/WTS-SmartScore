@@ -84,7 +84,7 @@ class ScriptReviewActivity : AppCompatActivity() {
                 })
                 controls.addView(Button(this@ScriptReviewActivity).apply {
                     text = "DELETE"
-                    setOnClickListener { lifecycleScope.launch { dao.deleteScriptPage(page.pageId); resequence(id); refreshScript(id); load() } }
+                    setOnClickListener { lifecycleScope.launch { dao.deleteScriptPage(page.pageId); resequence(this@ScriptReviewActivity.id); refreshScript(this@ScriptReviewActivity.id); load() } }
                 })
                 row.addView(controls)
                 root.addView(row)
