@@ -1,6 +1,7 @@
 package com.wts.smartscore.data
 import android.content.Context
 import androidx.room.*
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(entities=[BroadsheetEntity::class,SheetSideEntity::class,ScanEntity::class,ScoreReadingEntity::class,CorrectionEntity::class,ScriptEntity::class,ScriptPageEntity::class,AiMarkEntity::class,ExportEntity::class],version=2,exportSchema=true)

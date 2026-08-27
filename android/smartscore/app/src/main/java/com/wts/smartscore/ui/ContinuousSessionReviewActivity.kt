@@ -92,8 +92,8 @@ class ContinuousSessionReviewActivity : AppCompatActivity() {
         actions.addView(action("CROP") { showCropDialog(index) }, LinearLayout.LayoutParams(0, -2, 1f))
         card.addView(actions)
         val actions2 = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        actions2.addView(action("UP") { movePage(index, -1) }, LinearLayout.LayoutParams(0, -2, 1f).apply { isEnabled = index > 0 })
-        actions2.addView(action("DOWN") { movePage(index, 1) }, LinearLayout.LayoutParams(0, -2, 1f).apply { isEnabled = index < total - 1 })
+        actions2.addView(action("UP") { movePage(index, -1) }.apply { isEnabled = index > 0 }, LinearLayout.LayoutParams(0, -2, 1f))
+        actions2.addView(action("DOWN") { movePage(index, 1) }.apply { isEnabled = index < total - 1 }, LinearLayout.LayoutParams(0, -2, 1f))
         actions2.addView(action("DELETE") { deletePage(index) }, LinearLayout.LayoutParams(0, -2, 1f))
         card.addView(actions2)
         root.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 10 })
