@@ -1,0 +1,39 @@
+name: SmartScore Home Screenshot
+
+on:
+  push:
+    paths:
+      - '.github/workflows/home-screenshot.yml'
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified product APK artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/smartscore-apks
+          gh run download 33052380077 -n WTS-SmartScore-V1-APKs -D /tmp/smartscore-apks
+          ls -lh /tmp/smartscore-apks
+      - name: Launch SmartScore and capture Home
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install -r /tmp/smartscore-apks/WTS-SmartScore-V1-universal-debug.apk
+            adb shell am force-stop com.wts.smartscore
+            adb shell am start -n com.wts.smartscore/.ui.MainActivity
+            sleep 4
+            adb exec-out screencap -p > smartscore-home.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: smartscore-rebrand-home
+          path: smartscore-home.png
