@@ -1,0 +1,11 @@
+<resources>
+    <color name="smartscore_primary">#155EEF</color>
+    <color name="smartscore_primary_dark">#0B3FA7</color>
+    <color name="smartscore_accent">#00A67E</color>
+    <color name="smartscore_background">#F5F8FC</color>
+    <color name="smartscore_surface">#FFFFFF</color>
+    <color name="smartscore_text">#172033</color>
+    <color name="smartscore_text_muted">#667085</color>
+    <color name="smartscore_border">#DCE3EE</color>
+    <color name="smartscore_success">#087A5B</color>
+</resources>
