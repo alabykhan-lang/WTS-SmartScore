@@ -1,6 +1,13 @@
 <resources>
   <style name="Theme.WTSSmartScore" parent="Theme.Material3.DayNight.NoActionBar">
-    <item name="colorPrimary">#17324D</item><item name="colorSecondary">#0F8B8D</item>
-    <item name="android:fontFamily">sans</item><item name="android:windowLightStatusBar">false</item>
+    <item name="colorPrimary">@color/smartscore_primary</item>
+    <item name="colorSecondary">@color/smartscore_accent</item>
+    <item name="android:colorAccent">@color/smartscore_accent</item>
+    <item name="android:windowBackground">@color/smartscore_background</item>
+    <item name="colorSurface">@color/smartscore_surface</item>
+    <item name="colorOnSurface">@color/smartscore_text</item>
+    <item name="android:navigationBarColor">@color/smartscore_background</item>
+    <item name="android:statusBarColor">@color/smartscore_background</item>
+    <item name="android:fontFamily">sans</item>
   </style>
 </resources>
