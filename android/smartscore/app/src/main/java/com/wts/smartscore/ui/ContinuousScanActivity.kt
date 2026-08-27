@@ -8,6 +8,8 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.Gravity
@@ -106,7 +108,7 @@ class ContinuousScanActivity : AppCompatActivity() {
         overlay = DocumentGuideOverlay(this)
         val cameraFrame = FrameLayout(this).apply {
             addView(preview, FrameLayout.LayoutParams(-1, -1))
-            addView(overlay, FrameLayout.LayoutParams(-1, -1))
+            addView(this@ContinuousScanActivity.overlay, FrameLayout.LayoutParams(-1, -1))
         }
         root.addView(cameraFrame, LinearLayout.LayoutParams(-1, 0, 1f))
 
@@ -150,10 +152,7 @@ class ContinuousScanActivity : AppCompatActivity() {
                     val mat = ImageProxyTools.lumaMat(image)
                     val assessment = detector.detect(mat)
                     mat.release()
-                    runOnUiThread {
-                        overlay.show(assessment.quad, image.width, image.height)
-                        status.text = friendly(controller.state)
-                    }
+                    runOnUiThread { overlay.show(assessment.quad, image.width, image.height) }
                     if (controller.onFrame(assessment)) {
                         runOnUiThread { status.text = "HOLD STEADY" }
                         capturePage(false)
@@ -223,6 +222,11 @@ class ContinuousScanActivity : AppCompatActivity() {
 
     private fun finishSession() {
         if (finishingSession) return
+        if (capturing.get()) {
+            status.text = "SAVING LAST PAGE"
+            Handler(Looper.getMainLooper()).postDelayed({ finishSession() }, 180)
+            return
+        }
         finishingSession = true
         paused = true
         cameraProvider?.unbindAll()
