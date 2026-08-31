@@ -12,7 +12,7 @@
     "session": { "type": ["string", "null"] },
     "term": { "type": ["string", "null"] },
     "layout_id": { "type": "string" },
-    "layout_family": { "enum": ["SECONDARY_SINGLE_SUBJECT", "PRIMARY_MULTI_SUBJECT", "NURSERY_MULTI_SUBJECT", "UNKNOWN"] },
+    "layout_family": { "enum": ["SECONDARY_SINGLE_SUBJECT", "LEGACY_SECONDARY_SINGLE_SUBJECT", "PRIMARY_MULTI_SUBJECT", "NURSERY_MULTI_SUBJECT", "UNKNOWN"] },
     "expected_page_ids": { "type": ["array", "null"], "items": { "type": "string" } },
     "pages": {
       "type": "array",
@@ -32,6 +32,7 @@
           "layout_family": { "type": "string" },
           "subject_group": { "type": "string" },
           "template_version": { "type": "string" },
+          "coordinate_origin": { "enum": ["TOP_LEFT", "BOTTOM_LEFT"] },
           "rows": {
             "type": "array",
             "items": {
