@@ -257,10 +257,11 @@ class OpenCvDocumentDetector(
             Imgproc.convexHull(contour, hullIndices)
             val indices = hullIndices.toArray()
             if (indices.size < 4) return
-            val hullPoints = indices.mapNotNull { index: Int ->
-                if (index in source.indices) source[index] else null
-            }.toTypedArray()
-            if (hullPoints.size >= 4) addApproximations(hullPoints, "${method}_HULL", candidates)
+            val hullPoints = ArrayList<Point>(indices.size)
+            for (index in indices) {
+                if (index >= 0 && index < source.size) hullPoints.add(source[index])
+            }
+            if (hullPoints.size >= 4) addApproximations(hullPoints.toTypedArray(), "${method}_HULL", candidates)
         } finally {
             contour.release()
             hullIndices.release()
