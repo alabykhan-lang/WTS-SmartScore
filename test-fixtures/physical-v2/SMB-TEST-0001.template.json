@@ -1,0 +1,3686 @@
+{
+  "schema_version": "1.0.0",
+  "sheet_id": "SMB-TEST-0001",
+  "template_version": "a4-landscape-v1",
+  "canonical_width_mm": 297.0,
+  "canonical_height_mm": 210.0,
+  "paper_size": "A4",
+  "orientation": "landscape",
+  "roster_snapshot": [
+    {
+      "student_id": "WTS001",
+      "student_name": "ADIGUN BAZIM"
+    },
+    {
+      "student_id": "WTS002",
+      "student_name": "BAKARE FATHIAT"
+    },
+    {
+      "student_id": "WTS003",
+      "student_name": "OYELAMI MUIZ"
+    },
+    {
+      "student_id": "WTS004",
+      "student_name": "ADAM KASHFAT"
+    },
+    {
+      "student_id": "WTS005",
+      "student_name": "USMAN TOHEEBAT"
+    },
+    {
+      "student_id": "WTS006",
+      "student_name": "HASSAN IBRAHIM"
+    },
+    {
+      "student_id": "WTS007",
+      "student_name": "ADEYEMI SAMAD"
+    },
+    {
+      "student_id": "WTS008",
+      "student_name": "RAJI MARIAM"
+    },
+    {
+      "student_id": "WTS009",
+      "student_name": "AKANDE ABDULLAH"
+    },
+    {
+      "student_id": "WTS010",
+      "student_name": "SALAMI ZAINAB"
+    },
+    {
+      "student_id": "WTS011",
+      "student_name": "OLATUNJI RIDWAN"
+    },
+    {
+      "student_id": "WTS012",
+      "student_name": "BELLO AMINAT"
+    },
+    {
+      "student_id": "WTS013",
+      "student_name": "LAWAL MUHAMMAD"
+    },
+    {
+      "student_id": "WTS014",
+      "student_name": "AJIBOLA RUKAYAT"
+    },
+    {
+      "student_id": "WTS015",
+      "student_name": "FOLORUNSO HABEEB"
+    },
+    {
+      "student_id": "WTS016",
+      "student_name": "YUSUF BARAKAT"
+    },
+    {
+      "student_id": "WTS017",
+      "student_name": "ADEBAYO KHALID"
+    },
+    {
+      "student_id": "WTS018",
+      "student_name": "HAMMED RAHMAT"
+    }
+  ],
+  "assessment_configuration": [
+    {
+      "id": "ca1",
+      "label": "CA1",
+      "max_score": 10,
+      "digits": 2
+    },
+    {
+      "id": "ca2",
+      "label": "CA2",
+      "max_score": 10,
+      "digits": 2
+    },
+    {
+      "id": "exam",
+      "label": "Exam",
+      "max_score": 70,
+      "digits": 2
+    }
+  ],
+  "fiducial_definitions": [
+    {
+      "marker_family": "aruco_4x4_50",
+      "marker_id": 10,
+      "logical_position": "top_left",
+      "physical_coordinates_mm": {
+        "x": 10.0,
+        "y": 9.0,
+        "width": 7.0,
+        "height": 7.0
+      },
+      "canonical_coordinates_mm": {
+        "x": 10.0,
+        "y": 9.0,
+        "width": 7.0,
+        "height": 7.0
+      }
+    },
+    {
+      "marker_family": "aruco_4x4_50",
+      "marker_id": 11,
+      "logical_position": "top_right",
+      "physical_coordinates_mm": {
+        "x": 280.0,
+        "y": 9.0,
+        "width": 7.0,
+        "height": 7.0
+      },
+      "canonical_coordinates_mm": {
+        "x": 280.0,
+        "y": 9.0,
+        "width": 7.0,
+        "height": 7.0
+      }
+    },
+    {
+      "marker_family": "aruco_4x4_50",
+      "marker_id": 12,
+      "logical_position": "bottom_right",
+      "physical_coordinates_mm": {
+        "x": 280.0,
+        "y": 194.0,
+        "width": 7.0,
+        "height": 7.0
+      },
+      "canonical_coordinates_mm": {
+        "x": 280.0,
+        "y": 194.0,
+        "width": 7.0,
+        "height": 7.0
+      }
+    },
+    {
+      "marker_family": "aruco_4x4_50",
+      "marker_id": 13,
+      "logical_position": "bottom_left",
+      "physical_coordinates_mm": {
+        "x": 10.0,
+        "y": 194.0,
+        "width": 7.0,
+        "height": 7.0
+      },
+      "canonical_coordinates_mm": {
+        "x": 10.0,
+        "y": 194.0,
+        "width": 7.0,
+        "height": 7.0
+      }
+    }
+  ],
+  "qr_location_mm": {
+    "x": 260.0,
+    "y": 14.0,
+    "width": 17.0,
+    "height": 17.0
+  },
+  "table_geometry_mm": {
+    "x": 12.0,
+    "y": 44.0,
+    "width": 273.0,
+    "header_height": 9.0,
+    "row_height": 7.7,
+    "columns": {
+      "no_width": 9.0,
+      "student_id_width": 27.0,
+      "student_name_width": 79.0,
+      "score_zone_width": 158.0
+    },
+    "digit_box_width": 8.0,
+    "digit_box_height": 6.8,
+    "digit_gap": 1.0,
+    "assessment_gap": 2.5
+  },
+  "row_definitions": [
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "student_name": "ADIGUN BAZIM",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 53.0,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 53.45,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 0,
+              "student_id": "WTS001",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 53.45,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 0,
+              "student_id": "WTS001",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 53.45,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 53.45,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 0,
+              "student_id": "WTS001",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 53.45,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 0,
+              "student_id": "WTS001",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 53.45,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 53.45,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 0,
+              "student_id": "WTS001",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 53.45,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 0,
+              "student_id": "WTS001",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 53.45,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "student_name": "BAKARE FATHIAT",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 60.7,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 61.15,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 1,
+              "student_id": "WTS002",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 61.15,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 1,
+              "student_id": "WTS002",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 61.15,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 61.15,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 1,
+              "student_id": "WTS002",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 61.15,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 1,
+              "student_id": "WTS002",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 61.15,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 61.15,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 1,
+              "student_id": "WTS002",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 61.15,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 1,
+              "student_id": "WTS002",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 61.15,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "student_name": "OYELAMI MUIZ",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 68.4,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 68.85,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 2,
+              "student_id": "WTS003",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 68.85,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 2,
+              "student_id": "WTS003",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 68.85,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 68.85,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 2,
+              "student_id": "WTS003",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 68.85,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 2,
+              "student_id": "WTS003",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 68.85,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 68.85,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 2,
+              "student_id": "WTS003",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 68.85,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 2,
+              "student_id": "WTS003",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 68.85,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "student_name": "ADAM KASHFAT",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 76.1,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 76.55,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 3,
+              "student_id": "WTS004",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 76.55,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 3,
+              "student_id": "WTS004",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 76.55,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 76.55,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 3,
+              "student_id": "WTS004",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 76.55,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 3,
+              "student_id": "WTS004",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 76.55,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 76.55,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 3,
+              "student_id": "WTS004",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 76.55,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 3,
+              "student_id": "WTS004",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 76.55,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "student_name": "USMAN TOHEEBAT",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 83.8,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 84.25,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 4,
+              "student_id": "WTS005",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 84.25,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 4,
+              "student_id": "WTS005",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 84.25,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 84.25,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 4,
+              "student_id": "WTS005",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 84.25,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 4,
+              "student_id": "WTS005",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 84.25,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 84.25,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 4,
+              "student_id": "WTS005",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 84.25,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 4,
+              "student_id": "WTS005",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 84.25,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "student_name": "HASSAN IBRAHIM",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 91.5,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 91.95,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 5,
+              "student_id": "WTS006",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 91.95,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 5,
+              "student_id": "WTS006",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 91.95,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 91.95,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 5,
+              "student_id": "WTS006",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 91.95,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 5,
+              "student_id": "WTS006",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 91.95,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 91.95,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 5,
+              "student_id": "WTS006",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 91.95,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 5,
+              "student_id": "WTS006",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 91.95,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "student_name": "ADEYEMI SAMAD",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 99.2,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 99.65,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 6,
+              "student_id": "WTS007",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 99.65,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 6,
+              "student_id": "WTS007",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 99.65,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 99.65,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 6,
+              "student_id": "WTS007",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 99.65,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 6,
+              "student_id": "WTS007",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 99.65,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 99.65,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 6,
+              "student_id": "WTS007",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 99.65,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 6,
+              "student_id": "WTS007",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 99.65,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "student_name": "RAJI MARIAM",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 106.9,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 107.35,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 7,
+              "student_id": "WTS008",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 107.35,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 7,
+              "student_id": "WTS008",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 107.35,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 107.35,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 7,
+              "student_id": "WTS008",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 107.35,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 7,
+              "student_id": "WTS008",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 107.35,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 107.35,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 7,
+              "student_id": "WTS008",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 107.35,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 7,
+              "student_id": "WTS008",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 107.35,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "student_name": "AKANDE ABDULLAH",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 114.6,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 115.05,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 8,
+              "student_id": "WTS009",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 115.05,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 8,
+              "student_id": "WTS009",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 115.05,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 115.05,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 8,
+              "student_id": "WTS009",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 115.05,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 8,
+              "student_id": "WTS009",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 115.05,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 115.05,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 8,
+              "student_id": "WTS009",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 115.05,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 8,
+              "student_id": "WTS009",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 115.05,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "student_name": "SALAMI ZAINAB",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 122.3,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 122.75,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 9,
+              "student_id": "WTS010",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 122.75,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 9,
+              "student_id": "WTS010",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 122.75,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 122.75,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 9,
+              "student_id": "WTS010",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 122.75,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 9,
+              "student_id": "WTS010",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 122.75,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 122.75,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 9,
+              "student_id": "WTS010",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 122.75,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 9,
+              "student_id": "WTS010",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 122.75,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "student_name": "OLATUNJI RIDWAN",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 130.0,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 130.45,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 10,
+              "student_id": "WTS011",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 130.45,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 10,
+              "student_id": "WTS011",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 130.45,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 130.45,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 10,
+              "student_id": "WTS011",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 130.45,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 10,
+              "student_id": "WTS011",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 130.45,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 130.45,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 10,
+              "student_id": "WTS011",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 130.45,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 10,
+              "student_id": "WTS011",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 130.45,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "student_name": "BELLO AMINAT",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 137.7,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 138.15,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 11,
+              "student_id": "WTS012",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 138.15,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 11,
+              "student_id": "WTS012",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 138.15,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 138.15,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 11,
+              "student_id": "WTS012",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 138.15,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 11,
+              "student_id": "WTS012",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 138.15,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 138.15,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 11,
+              "student_id": "WTS012",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 138.15,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 11,
+              "student_id": "WTS012",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 138.15,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "student_name": "LAWAL MUHAMMAD",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 145.4,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 145.85,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 12,
+              "student_id": "WTS013",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 145.85,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 12,
+              "student_id": "WTS013",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 145.85,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 145.85,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 12,
+              "student_id": "WTS013",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 145.85,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 12,
+              "student_id": "WTS013",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 145.85,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 145.85,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 12,
+              "student_id": "WTS013",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 145.85,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 12,
+              "student_id": "WTS013",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 145.85,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "student_name": "AJIBOLA RUKAYAT",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 153.1,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 153.55,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 13,
+              "student_id": "WTS014",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 153.55,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 13,
+              "student_id": "WTS014",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 153.55,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 153.55,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 13,
+              "student_id": "WTS014",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 153.55,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 13,
+              "student_id": "WTS014",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 153.55,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 153.55,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 13,
+              "student_id": "WTS014",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 153.55,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 13,
+              "student_id": "WTS014",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 153.55,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "student_name": "FOLORUNSO HABEEB",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 160.8,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 161.25,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 14,
+              "student_id": "WTS015",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 161.25,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 14,
+              "student_id": "WTS015",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 161.25,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 161.25,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 14,
+              "student_id": "WTS015",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 161.25,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 14,
+              "student_id": "WTS015",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 161.25,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 161.25,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 14,
+              "student_id": "WTS015",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 161.25,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 14,
+              "student_id": "WTS015",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 161.25,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "student_name": "YUSUF BARAKAT",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 168.5,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 168.95,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 15,
+              "student_id": "WTS016",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 168.95,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 15,
+              "student_id": "WTS016",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 168.95,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 168.95,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 15,
+              "student_id": "WTS016",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 168.95,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 15,
+              "student_id": "WTS016",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 168.95,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 168.95,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 15,
+              "student_id": "WTS016",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 168.95,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 15,
+              "student_id": "WTS016",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 168.95,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "student_name": "ADEBAYO KHALID",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 176.2,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 176.65,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 16,
+              "student_id": "WTS017",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 176.65,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 16,
+              "student_id": "WTS017",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 176.65,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 176.65,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 16,
+              "student_id": "WTS017",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 176.65,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 16,
+              "student_id": "WTS017",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 176.65,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 176.65,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 16,
+              "student_id": "WTS017",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 176.65,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 16,
+              "student_id": "WTS017",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 176.65,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "student_name": "HAMMED RAHMAT",
+      "row_geometry_mm": {
+        "x": 12.0,
+        "y": 183.9,
+        "width": 273.0,
+        "height": 7.7
+      },
+      "score_rois": [
+        {
+          "assessment_id": "ca1",
+          "score_roi_mm": {
+            "x": 178.0,
+            "y": 184.35,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 17,
+              "student_id": "WTS018",
+              "assessment_id": "ca1",
+              "digit_position": 0,
+              "x": 178.0,
+              "y": 184.35,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 17,
+              "student_id": "WTS018",
+              "assessment_id": "ca1",
+              "digit_position": 1,
+              "x": 187.0,
+              "y": 184.35,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "ca2",
+          "score_roi_mm": {
+            "x": 197.5,
+            "y": 184.35,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 17,
+              "student_id": "WTS018",
+              "assessment_id": "ca2",
+              "digit_position": 0,
+              "x": 197.5,
+              "y": 184.35,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 17,
+              "student_id": "WTS018",
+              "assessment_id": "ca2",
+              "digit_position": 1,
+              "x": 206.5,
+              "y": 184.35,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        },
+        {
+          "assessment_id": "exam",
+          "score_roi_mm": {
+            "x": 217.0,
+            "y": 184.35,
+            "width": 17.0,
+            "height": 6.8
+          },
+          "digit_rois": [
+            {
+              "row_index": 17,
+              "student_id": "WTS018",
+              "assessment_id": "exam",
+              "digit_position": 0,
+              "x": 217.0,
+              "y": 184.35,
+              "width": 8.0,
+              "height": 6.8
+            },
+            {
+              "row_index": 17,
+              "student_id": "WTS018",
+              "assessment_id": "exam",
+              "digit_position": 1,
+              "x": 226.0,
+              "y": 184.35,
+              "width": 8.0,
+              "height": 6.8
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "score_roi_definitions": [
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 53.45,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 53.45,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 53.45,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 61.15,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 61.15,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 61.15,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 68.85,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 68.85,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 68.85,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 76.55,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 76.55,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 76.55,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 84.25,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 84.25,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 84.25,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 91.95,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 91.95,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 91.95,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 99.65,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 99.65,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 99.65,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 107.35,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 107.35,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 107.35,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 115.05,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 115.05,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 115.05,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 122.75,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 122.75,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 122.75,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 130.45,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 130.45,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 130.45,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 138.15,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 138.15,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 138.15,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 145.85,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 145.85,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 145.85,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 153.55,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 153.55,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 153.55,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 161.25,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 161.25,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 161.25,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 168.95,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 168.95,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 168.95,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 176.65,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 176.65,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 176.65,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "ca1",
+      "x": 178.0,
+      "y": 184.35,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "ca2",
+      "x": 197.5,
+      "y": 184.35,
+      "width": 17.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "exam",
+      "x": 217.0,
+      "y": 184.35,
+      "width": 17.0,
+      "height": 6.8
+    }
+  ],
+  "digit_level_roi_definitions": [
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 53.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 53.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 53.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 53.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 53.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 53.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 61.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 61.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 61.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 61.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 61.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 61.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 68.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 68.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 68.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 68.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 68.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 68.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 76.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 76.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 76.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 76.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 76.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 76.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 84.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 84.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 84.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 84.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 84.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 84.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 91.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 91.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 91.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 91.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 91.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 91.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 99.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 99.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 99.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 99.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 99.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 99.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 107.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 107.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 107.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 107.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 107.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 107.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 115.05,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 115.05,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 115.05,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 115.05,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 115.05,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 115.05,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 122.75,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 122.75,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 122.75,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 122.75,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 122.75,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 122.75,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 130.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 130.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 130.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 130.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 130.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 130.45,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 138.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 138.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 138.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 138.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 138.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 138.15,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 145.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 145.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 145.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 145.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 145.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 145.85,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 153.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 153.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 153.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 153.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 153.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 153.55,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 161.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 161.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 161.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 161.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 161.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 161.25,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 168.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 168.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 168.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 168.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 168.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 168.95,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 176.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 176.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 176.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 176.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 176.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 176.65,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "ca1",
+      "digit_position": 0,
+      "x": 178.0,
+      "y": 184.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "ca1",
+      "digit_position": 1,
+      "x": 187.0,
+      "y": 184.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "ca2",
+      "digit_position": 0,
+      "x": 197.5,
+      "y": 184.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "ca2",
+      "digit_position": 1,
+      "x": 206.5,
+      "y": 184.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "exam",
+      "digit_position": 0,
+      "x": 217.0,
+      "y": 184.35,
+      "width": 8.0,
+      "height": 6.8
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "assessment_id": "exam",
+      "digit_position": 1,
+      "x": 226.0,
+      "y": 184.35,
+      "width": 8.0,
+      "height": 6.8
+    }
+  ],
+  "ground_truth_record_schema": "../schemas/ocr-ground-truth.schema.json",
+  "document_metadata": {
+    "school_name": "WAY TO SUCCESS STANDARD SCHOOLS",
+    "session": "2026/2027",
+    "term": "FIRST TERM",
+    "class_name": "SS2",
+    "subject": "ECONOMICS",
+    "teacher": "TEST TEACHER",
+    "generated_date": "2026-08-15"
+  }
+}

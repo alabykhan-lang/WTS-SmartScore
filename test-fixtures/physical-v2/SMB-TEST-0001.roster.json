@@ -1,0 +1,97 @@
+{
+  "sheet_id": "SMB-TEST-0001",
+  "roster_version": "test-roster-18-v1",
+  "student_count": 18,
+  "students": [
+    {
+      "row_index": 0,
+      "student_id": "WTS001",
+      "student_name": "ADIGUN BAZIM"
+    },
+    {
+      "row_index": 1,
+      "student_id": "WTS002",
+      "student_name": "BAKARE FATHIAT"
+    },
+    {
+      "row_index": 2,
+      "student_id": "WTS003",
+      "student_name": "OYELAMI MUIZ"
+    },
+    {
+      "row_index": 3,
+      "student_id": "WTS004",
+      "student_name": "ADAM KASHFAT"
+    },
+    {
+      "row_index": 4,
+      "student_id": "WTS005",
+      "student_name": "USMAN TOHEEBAT"
+    },
+    {
+      "row_index": 5,
+      "student_id": "WTS006",
+      "student_name": "HASSAN IBRAHIM"
+    },
+    {
+      "row_index": 6,
+      "student_id": "WTS007",
+      "student_name": "ADEYEMI SAMAD"
+    },
+    {
+      "row_index": 7,
+      "student_id": "WTS008",
+      "student_name": "RAJI MARIAM"
+    },
+    {
+      "row_index": 8,
+      "student_id": "WTS009",
+      "student_name": "AKANDE ABDULLAH"
+    },
+    {
+      "row_index": 9,
+      "student_id": "WTS010",
+      "student_name": "SALAMI ZAINAB"
+    },
+    {
+      "row_index": 10,
+      "student_id": "WTS011",
+      "student_name": "OLATUNJI RIDWAN"
+    },
+    {
+      "row_index": 11,
+      "student_id": "WTS012",
+      "student_name": "BELLO AMINAT"
+    },
+    {
+      "row_index": 12,
+      "student_id": "WTS013",
+      "student_name": "LAWAL MUHAMMAD"
+    },
+    {
+      "row_index": 13,
+      "student_id": "WTS014",
+      "student_name": "AJIBOLA RUKAYAT"
+    },
+    {
+      "row_index": 14,
+      "student_id": "WTS015",
+      "student_name": "FOLORUNSO HABEEB"
+    },
+    {
+      "row_index": 15,
+      "student_id": "WTS016",
+      "student_name": "YUSUF BARAKAT"
+    },
+    {
+      "row_index": 16,
+      "student_id": "WTS017",
+      "student_name": "ADEBAYO KHALID"
+    },
+    {
+      "row_index": 17,
+      "student_id": "WTS018",
+      "student_name": "HAMMED RAHMAT"
+    }
+  ]
+}

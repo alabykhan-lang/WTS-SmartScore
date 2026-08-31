@@ -11,6 +11,9 @@ class V2TemplateRepository(@Suppress("UNUSED_PARAMETER") context: android.conten
     val subject = "Economics"
     val sheetId = "WTS-SM-V2-DEMO-0001"
 
+    private val legacyV2Version = "2.0-prototype"
+    private val smbTestVersion = "a4-landscape-v1"
+
     private val names = listOf(
         "Adigun Bazim", "Bakare Fathiat", "Oyelami Muiz", "Adam Kashfat", "Usman Toheebat",
         "Hassan Ibrahim", "Adebayo Mariam", "Ojo Samuel", "Akinola Temilade", "Lawal Hammed",
@@ -20,6 +23,24 @@ class V2TemplateRepository(@Suppress("UNUSED_PARAMETER") context: android.conten
         "Oladapo Faith", "Aderibigbe Halimat", "Ogunleye Malik", "Taiwo Kemi", "Kareem Mubashir",
         "Adekunle Seyi", "Bello Mariam", "Ogunbiyi Peter", "Sanni Rukayat", "Adewale Tobi",
         "Ishola Zainab", "Akinyemi David", "Yusuf Amina", "Ojo Favour", "Babatunde Kola"
+    )
+
+    /** Names printed by the physical WTS SMARTMARK V2 test sheet. */
+    private val legacyV2Names = listOf(
+        "Adigun Bazim", "Bakare Fathiat", "Oyelami Muiz", "Adam Kashfat", "Usman Toheebat",
+        "Hassan Ibrahim", "Adebayo Mariam", "Ojo Samuel", "Akinola Temilade", "Lawal Hammed",
+        "Oyediran Zainab", "Afolabi Daniel", "Salami Khadijat", "Olatunji Victor", "Adeleke Rofiat",
+        "Ibrahim Sodiq", "Ajibade Deborah", "Amoo Ridwan", "Oyeniyi Faruq", "Balogun Aminat",
+        "Oluwaseun Martins", "Adeniyi Barakat", "Ogundele Praise", "Yusuf Lateefah", "Fashina Habeeb",
+        "Oladapo Faith", "Aderibigbe Halimat", "Ogunleye Malik", "Taiwo Kemi", "Kareem Mubashir"
+    )
+
+    /** Exact roster printed by the recovered one-page SMB-TEST-0001 fixture. */
+    private val smbTestNames = listOf(
+        "ADIGUN BAZIM", "BAKARE FATHIAT", "OYELAMI MUIZ", "ADAM KASHFAT", "USMAN TOHEEBAT",
+        "HASSAN IBRAHIM", "ADEYEMI SAMAD", "RAJI MARIAM", "AKANDE ABDULLAH", "SALAMI ZAINAB",
+        "OLATUNJI RIDWAN", "BELLO AMINAT", "LAWAL MUHAMMAD", "AJIBOLA RUKAYAT", "FOLORUNSO HABEEB",
+        "YUSUF BARAKAT", "ADEBAYO KHALID", "HAMMED RAHMAT"
     )
 
     private data class AssessmentDef(val id: String, val x: Double, val width: Double, val maximum: Double, val label: String)
@@ -33,7 +54,12 @@ class V2TemplateRepository(@Suppress("UNUSED_PARAMETER") context: android.conten
 
     private val manifests: List<TemplateManifest> by lazy {
         listOf(
-            secondaryManifest(sheetId, classLabel, subject, 30, 2, "secondary-economics-v3"),
+            // This ID is the physical V2 sheet used in the phone test. Its
+            // coordinates are intentionally frozen to the printed artifact;
+            // applying the newer generated geometry makes every crop miss.
+            legacyV2Manifest(),
+            // A second recovered fixture exercises the one-page manifest path.
+            smbTestManifest(),
             secondaryManifest("WTS-SS-SECONDARY-ONE-001", "TEST JSS1", "English Language", 8, 1, "secondary-english-v3"),
             secondaryManifest("WTS-SS-SECONDARY-LARGE-001", "TEST SS2", "Mathematics", 36, 3, "secondary-mathematics-v3"),
             primaryManifest("WTS-SS-PRIMARY-MULTI-001", "TEST PRIMARY 4", "English • Mathematics • Basic Science • Social Studies", "primary-four-subject-v1"),
@@ -42,14 +68,29 @@ class V2TemplateRepository(@Suppress("UNUSED_PARAMETER") context: android.conten
     }
 
     fun allManifests(): List<TemplateManifest> = manifests
-    fun manifestFor(id: String): TemplateManifest? = manifests.firstOrNull { it.sheetId == id }
+    fun manifestFor(id: String): TemplateManifest? = manifests.firstOrNull { it.sheetId.equals(id.trim(), ignoreCase = true) }
     fun currentManifest(): TemplateManifest = requireNotNull(manifestFor(sheetId))
 
+    /** Resolve a QR/OCR identity without requiring the QR to carry a page id. */
+    fun pageForIdentity(identity: SheetPageIdentity): SheetPageTemplate? {
+        identity.pageId?.let { pageById(it)?.let { page -> return page } }
+        val manifest = manifestFor(identity.sheetId) ?: return null
+        identity.pageNumber?.let { manifest.pageByNumber(it)?.let { page -> return page } }
+        return manifest.pages.singleOrNull()
+    }
+
     fun pageById(id: String): SheetPageTemplate? {
-        val direct = manifests.asSequence().mapNotNull { it.pageById(id) }.firstOrNull()
+        val normalized = id.trim().uppercase()
+        if (normalized.isBlank()) return null
+        val direct = manifests.asSequence().mapNotNull { manifest ->
+            manifest.pages.firstOrNull { it.pageId.equals(normalized, ignoreCase = true) }
+        }.firstOrNull()
         if (direct != null) return direct
-        // Accept the legacy V2 side QR while migrating old locally printed test sheets.
-        val legacy = Regex("^(.+)-S([0-9]+)$").find(id) ?: return null
+        // A one-page manifest can be identified by its sheet id alone.
+        manifestFor(normalized)?.pages?.singleOrNull()?.let { return it }
+        // Accept both the legacy V2 side QR and page IDs while migrating old
+        // locally printed test sheets.
+        val legacy = Regex("^(.+)-(?:S|P)([0-9]+)$").find(normalized) ?: return null
         val legacySheet = legacy.groupValues[1]
         val number = legacy.groupValues[2].toIntOrNull() ?: return null
         return manifestFor(legacySheet)?.pageByNumber(number)
@@ -103,6 +144,138 @@ class V2TemplateRepository(@Suppress("UNUSED_PARAMETER") context: android.conten
             )
         }
         return TemplateManifest(templateVersion, id, className, subjectGroup, layoutId, "SECONDARY_SINGLE_SUBJECT", "2026/2027", "FIRST", expected, pageTemplates)
+    }
+
+    /** Frozen geometry for the physical WTS SMARTMARK V2 test sheet. */
+    private fun legacyV2Manifest(): TemplateManifest {
+        val id = sheetId
+        val pageCount = 2
+        val pages = (1..pageCount).map { pageNumber ->
+            val start = if (pageNumber == 1) 1 else 16
+            val end = if (pageNumber == 1) 15 else 30
+            SheetPageTemplate(
+                sheetId = id,
+                pageId = "$id-P$pageNumber",
+                pageNumber = pageNumber,
+                expectedPageCount = pageCount,
+                rowStart = start,
+                rowEnd = end,
+                pageW = 841.89,
+                pageH = 595.28,
+                rows = legacyV2Rows(start, end),
+                layoutId = "legacy-v2-frozen",
+                layoutFamily = "LEGACY_SECONDARY_SINGLE_SUBJECT",
+                subjectGroup = subject,
+                templateVersion = legacyV2Version
+            )
+        }
+        return TemplateManifest(
+            templateVersion = legacyV2Version,
+            sheetId = id,
+            classLabel = classLabel,
+            subjectGroup = subject,
+            layoutId = "legacy-v2-frozen",
+            layoutFamily = "LEGACY_SECONDARY_SINGLE_SUBJECT",
+            session = "2026/2027",
+            term = "FIRST",
+            expectedPageIds = pages.map { it.pageId },
+            pages = pages
+        )
+    }
+
+    private fun legacyV2Rows(start: Int, end: Int): List<RowDef> {
+        val assessments = listOf(
+            Triple("ca1", 266.46, 10.0),
+            Triple("ca2", 354.33, 10.0),
+            Triple("ca3", 442.20, 10.0),
+            Triple("exam", 530.08, 70.0)
+        )
+        return (start..end).mapIndexed { offset, rowNumber ->
+            val y = 446.74 - (offset * 24.66)
+            val rois = assessments.map { (assessmentId, x, maximum) ->
+                ScoreRoiDef(
+                    assessmentId = assessmentId,
+                    maximum = maximum,
+                    x = x,
+                    y = y,
+                    w = 87.87,
+                    h = 24.66,
+                    digitBoxes = listOf(
+                        DigitBoxDef(x + 18.42, y + 3.40, 22.68, 17.86, 0),
+                        DigitBoxDef(x + 46.77, y + 3.40, 22.68, 17.86, 1)
+                    ),
+                    label = assessmentId.uppercase()
+                )
+            }
+            RowDef(
+                rowNo = rowNumber,
+                studentId = "TEST-STU-${rowNumber.toString().padStart(3, '0')}",
+                studentName = legacyV2Names[rowNumber - 1],
+                rois = rois
+            )
+        }
+    }
+
+    /** Exact geometry for the one-page recovered A4-landscape fixture. */
+    private fun smbTestManifest(): TemplateManifest {
+        val id = "SMB-TEST-0001"
+        val pageId = "$id-P1"
+        val assessments = listOf(
+            Triple("ca1", 178.0, 10.0),
+            Triple("ca2", 197.5, 10.0),
+            Triple("exam", 217.0, 70.0)
+        )
+        val rows = (1..smbTestNames.size).map { rowNumber ->
+            val y = 53.45 + ((rowNumber - 1) * 7.70)
+            RowDef(
+                rowNo = rowNumber,
+                studentId = "SMB-TEST-STU-${rowNumber.toString().padStart(3, '0')}",
+                studentName = smbTestNames[rowNumber - 1],
+                rois = assessments.map { (assessmentId, x, maximum) ->
+                    ScoreRoiDef(
+                        assessmentId = assessmentId,
+                        maximum = maximum,
+                        x = x,
+                        y = y,
+                        w = 17.0,
+                        h = 6.80,
+                        digitBoxes = listOf(
+                            DigitBoxDef(x, y, 8.0, 6.80, 0),
+                            DigitBoxDef(x + 9.0, y, 8.0, 6.80, 1)
+                        ),
+                        label = assessmentId.uppercase()
+                    )
+                }
+            )
+        }
+        val page = SheetPageTemplate(
+            sheetId = id,
+            pageId = pageId,
+            pageNumber = 1,
+            expectedPageCount = 1,
+            rowStart = 1,
+            rowEnd = rows.size,
+            pageW = 297.0,
+            pageH = 210.0,
+            rows = rows,
+            layoutId = "legacy-a4-landscape-v1",
+            layoutFamily = "LEGACY_SECONDARY_SINGLE_SUBJECT",
+            subjectGroup = "ECONOMICS",
+            templateVersion = smbTestVersion,
+            coordinateOrigin = "TOP_LEFT"
+        )
+        return TemplateManifest(
+            templateVersion = smbTestVersion,
+            sheetId = id,
+            classLabel = "SS2",
+            subjectGroup = "ECONOMICS",
+            layoutId = "legacy-a4-landscape-v1",
+            layoutFamily = "LEGACY_SECONDARY_SINGLE_SUBJECT",
+            session = "2025/2026",
+            term = "FIRST",
+            expectedPageIds = listOf(pageId),
+            pages = listOf(page)
+        )
     }
 
     private fun primaryManifest(id: String, className: String, subjectGroup: String, layoutId: String): TemplateManifest {

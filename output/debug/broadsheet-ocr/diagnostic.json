@@ -1,0 +1,76 @@
+{
+  "schema_version": "deterministic-test-1",
+  "fixture": "SMB-TEST-0001",
+  "source": "blank recovered physical-style PDF with synthetic labelled marks",
+  "note": "This validates geometry, ink/state separation, digit assembly and maximum checks; Android ML Kit handwriting accuracy is not measured here.",
+  "input_scan": "output/debug/broadsheet-ocr/01-input-scan.jpg",
+  "canonical_page": "output/debug/broadsheet-ocr/01-input-scan.jpg",
+  "template_overlay": "output/debug/broadsheet-ocr/template-overlay-example.jpg",
+  "geometry_checks": {
+    "coordinate_origin": "TOP_LEFT",
+    "row_1_y_mm": 53.45,
+    "row_18_y_mm": 184.35,
+    "row_1_maps_above_row_18": true,
+    "all_score_rois_have_two_digit_boxes": true
+  },
+  "sample_crops": [
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "ca1",
+      "source": "output/debug/broadsheet-ocr/roi/student-001-ca1-source.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/roi/student-001-ca1-preprocessed.jpg"
+    },
+    {
+      "student": "BAKARE FATHIAT",
+      "assessment": "exam",
+      "source": "output/debug/broadsheet-ocr/roi/student-002-exam-source.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/roi/student-002-exam-preprocessed.jpg"
+    },
+    {
+      "student": "RAJI MARIAM",
+      "assessment": "ca1",
+      "source": "output/debug/broadsheet-ocr/roi/student-008-ca1-source.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/roi/student-008-ca1-preprocessed.jpg"
+    },
+    {
+      "student": "RAJI MARIAM",
+      "assessment": "ca2",
+      "source": "output/debug/broadsheet-ocr/roi/student-008-ca2-source.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/roi/student-008-ca2-preprocessed.jpg"
+    }
+  ],
+  "synthetic_values": {
+    "1:ca1": "0",
+    "1:ca2": "1",
+    "1:exam": "42",
+    "2:ca1": "2",
+    "2:ca2": "3",
+    "2:exam": "51",
+    "3:ca1": "4",
+    "3:ca2": "5",
+    "3:exam": "52",
+    "4:ca1": "6",
+    "4:ca2": "7",
+    "4:exam": "58",
+    "5:ca1": "8",
+    "5:ca2": "9",
+    "5:exam": "60",
+    "6:ca1": "10",
+    "6:ca2": "61",
+    "6:exam": "62",
+    "7:ca1": "67"
+  },
+  "roi_count": 54,
+  "diagnostic_fields": [
+    "student",
+    "assessment",
+    "expected_roi_coordinates",
+    "raw_ocr_text",
+    "normalized_ocr_text",
+    "blank_score",
+    "ink_ratio",
+    "recognition_state",
+    "final_value",
+    "validation_result"
+  ]
+}

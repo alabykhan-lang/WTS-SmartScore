@@ -1,0 +1,348 @@
+{
+  "test_scope": "geometry_ink_and_score_assembly",
+  "mlkit_accuracy_measured": false,
+  "cases": [
+    {
+      "case": "0",
+      "input_digit_boxes": [
+        0,
+        0
+      ],
+      "expected_value": 0,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 0,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "1",
+      "input_digit_boxes": [
+        0,
+        1
+      ],
+      "expected_value": 1,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 1,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "2",
+      "input_digit_boxes": [
+        0,
+        2
+      ],
+      "expected_value": 2,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 2,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "3",
+      "input_digit_boxes": [
+        0,
+        3
+      ],
+      "expected_value": 3,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 3,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "4",
+      "input_digit_boxes": [
+        0,
+        4
+      ],
+      "expected_value": 4,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 4,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "5",
+      "input_digit_boxes": [
+        0,
+        5
+      ],
+      "expected_value": 5,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 5,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "6",
+      "input_digit_boxes": [
+        0,
+        6
+      ],
+      "expected_value": 6,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 6,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "7",
+      "input_digit_boxes": [
+        0,
+        7
+      ],
+      "expected_value": 7,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 7,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "8",
+      "input_digit_boxes": [
+        0,
+        8
+      ],
+      "expected_value": 8,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 8,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "9",
+      "input_digit_boxes": [
+        0,
+        9
+      ],
+      "expected_value": 9,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 9,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "10",
+      "input_digit_boxes": [
+        1,
+        0
+      ],
+      "expected_value": 10,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 10,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "42",
+      "input_digit_boxes": [
+        4,
+        2
+      ],
+      "expected_value": 42,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 42,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "51",
+      "input_digit_boxes": [
+        5,
+        1
+      ],
+      "expected_value": 51,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 51,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "52",
+      "input_digit_boxes": [
+        5,
+        2
+      ],
+      "expected_value": 52,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 52,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "58",
+      "input_digit_boxes": [
+        5,
+        8
+      ],
+      "expected_value": 58,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 58,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "60",
+      "input_digit_boxes": [
+        6,
+        0
+      ],
+      "expected_value": 60,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 60,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "61",
+      "input_digit_boxes": [
+        6,
+        1
+      ],
+      "expected_value": 61,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 61,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "62",
+      "input_digit_boxes": [
+        6,
+        2
+      ],
+      "expected_value": 62,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 62,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "67",
+      "input_digit_boxes": [
+        6,
+        7
+      ],
+      "expected_value": 67,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 67,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "blank",
+      "input_digit_boxes": [
+        null,
+        null
+      ],
+      "expected_state": "BLANK",
+      "result": {
+        "value": null,
+        "state": "BLANK",
+        "validation": "NO_INK"
+      },
+      "passed": true
+    },
+    {
+      "case": "messy-digit",
+      "input_digit_boxes": [
+        null,
+        5
+      ],
+      "expected_state": "DOUBTFUL",
+      "result": {
+        "value": null,
+        "state": "DOUBTFUL",
+        "validation": "INK_UNRECOGNIZED_OR_LOW_CONFIDENCE"
+      },
+      "passed": true
+    },
+    {
+      "case": "border-touching",
+      "input_digit_boxes": [
+        5,
+        2
+      ],
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 52,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "over-maximum",
+      "input_digit_boxes": [
+        9,
+        9
+      ],
+      "expected_state": "INVALID",
+      "result": {
+        "value": 99,
+        "state": "INVALID",
+        "validation": "OVER_MAXIMUM"
+      },
+      "passed": true
+    }
+  ],
+  "all_structural_cases_passed": true
+}

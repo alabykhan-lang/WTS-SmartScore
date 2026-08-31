@@ -104,7 +104,7 @@ class BroadsheetReviewActivity : AppCompatActivity() {
         gravity = Gravity.CENTER
         setOnClickListener { reading?.let(::edit) }
         when (reading?.state) {
-            "REVIEW_REQUIRED" -> setTextColor(Color.rgb(181, 116, 0))
+            "REVIEW_REQUIRED", "DOUBTFUL", "MISALIGNED" -> setTextColor(Color.rgb(181, 116, 0))
             "INVALID", "UNREADABLE" -> setTextColor(Color.rgb(190, 50, 50))
             "MANUALLY_CORRECTED" -> setTextColor(Color.rgb(31, 114, 76))
         }
@@ -116,7 +116,7 @@ class BroadsheetReviewActivity : AppCompatActivity() {
         return when (reading.state) {
             "BLANK" -> "—"
             "INVALID" -> "${value?.toInt() ?: "?"} !"
-            "REVIEW_REQUIRED" -> "${value?.toInt() ?: "?"} ?"
+            "REVIEW_REQUIRED", "DOUBTFUL", "MISALIGNED" -> "${value?.toInt() ?: "?"} ?"
             "UNREADABLE" -> "?"
             else -> value?.toInt()?.toString() ?: "?"
         }

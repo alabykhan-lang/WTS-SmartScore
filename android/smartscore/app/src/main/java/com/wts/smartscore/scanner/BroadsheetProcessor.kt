@@ -2,37 +2,489 @@ package com.wts.smartscore.scanner
 
 import android.content.Context
 import android.graphics.Bitmap
-import com.google.android.gms.tasks.Tasks
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import com.wts.smartscore.data.ScoreReadingEntity
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.TextRecognizer
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import org.json.JSONArray
+import org.json.JSONObject
 import org.opencv.android.Utils
-import org.opencv.core.*
+import org.opencv.core.Core
+import org.opencv.core.CvType
+import org.opencv.core.Mat
+import org.opencv.core.Scalar
+import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import java.io.File
 import java.util.UUID
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
-class BroadsheetProcessor(private val context:Context){
- data class Digit(val value:Int?,val confidence:Double,val blank:Boolean,val cropPath:String?)
- fun process(bitmap:Bitmap,side:SheetPageTemplate,scanId:String):List<ScoreReadingEntity>{
-  val recognizer=TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-  return try{side.rows.flatMap{row->row.rois.map{roi->
-   val digits=roi.digitBoxes.sortedBy{it.index}.map{recognizeDigit(bitmap,side,it,recognizer,row.rowNo,roi.assessmentId)}
-   val (value,state)=assemble(digits,roi.maximum);val confidence=digits.filter{!it.blank}.minOfOrNull{it.confidence}?:1.0
-   ScoreReadingEntity(UUID.randomUUID().toString(),side.sheetId,side.sideId,scanId,row.studentId,row.studentName,roi.assessmentId,roi.maximum,value,value,confidence,state,digits.firstOrNull{it.cropPath!=null}?.cropPath,null)
-  }}}finally{recognizer.close()}
- }
- private fun recognizeDigit(page:Bitmap,side:SheetPageTemplate,b:DigitBoxDef,recognizer:com.google.mlkit.vision.text.TextRecognizer,row:Int,assessment:String):Digit{
-  val x=(b.x/side.pageW*page.width).toInt().coerceIn(0,page.width-2);val y=((side.pageH-(b.y+b.h))/side.pageH*page.height).toInt().coerceIn(0,page.height-2)
-  val w=(b.w/side.pageW*page.width).toInt().coerceIn(2,page.width-x);val h=(b.h/side.pageH*page.height).toInt().coerceIn(2,page.height-y)
-  val crop=Bitmap.createBitmap(page,x,y,w,h);val mx=(w*0.12).toInt();val my=(h*0.12).toInt();val iw=(w-2*mx).coerceAtLeast(1);val ih=(h-2*my).coerceAtLeast(1);val inner=Bitmap.createBitmap(crop,mx.coerceAtMost(w-1),my.coerceAtMost(h-1),iw.coerceAtMost(w-mx),ih.coerceAtMost(h-my));crop.recycle()
-  val m=Mat();Utils.bitmapToMat(inner,m);val g=Mat();Imgproc.cvtColor(m,g,Imgproc.COLOR_RGBA2GRAY);val mean=MatOfDouble();val std=MatOfDouble();Core.meanStdDev(g,mean,std);val variance=std.toArray().firstOrNull()?:0.0
-  if(variance<12.0){listOf(m,g,mean,std).forEach{it.release()};inner.recycle();return Digit(null,1.0,true,null)}
-  val bw=Mat();Imgproc.threshold(g,bw,0.0,255.0,Imgproc.THRESH_BINARY_INV+Imgproc.THRESH_OTSU);val enlarged=Mat();Imgproc.resize(bw,enlarged,Size(bw.cols()*4.0,bw.rows()*4.0),0.0,0.0,Imgproc.INTER_CUBIC);val rgba=Mat();Imgproc.cvtColor(enlarged,rgba,Imgproc.COLOR_GRAY2RGBA);val out=Bitmap.createBitmap(rgba.cols(),rgba.rows(),Bitmap.Config.ARGB_8888);Utils.matToBitmap(rgba,out)
-  val dir=File(context.filesDir,"broadsheet-crops").apply{mkdirs()};val cropFile=File(dir,"r${row}-${assessment}-${b.index}-${System.nanoTime()}.jpg");ImageProcessor.saveJpeg(out,cropFile)
-  val txt=Tasks.await(recognizer.process(InputImage.fromBitmap(out,0))).text.filter{it.isDigit()};val value=txt.firstOrNull()?.digitToIntOrNull();val confidence=if(txt.length==1)0.92 else if(value!=null)0.65 else 0.35
-  listOf(m,g,mean,std,bw,enlarged,rgba).forEach{it.release()};inner.recycle();out.recycle();return Digit(value,confidence,false,cropFile.absolutePath)
- }
- private fun assemble(d:List<Digit>,maximum:Double):Pair<Double?,String>{if(d.all{it.blank})return null to "BLANK";if(d.any{!it.blank&&it.value==null})return null to "UNREADABLE";val vals=d.mapNotNull{it.value};if(vals.isEmpty())return null to "UNREADABLE";val v=if(vals.size==1)vals[0].toDouble() else (vals.takeLast(2)[0]*10+vals.takeLast(2)[1]).toDouble();val conf=d.filter{!it.blank}.minOfOrNull{it.confidence}?:0.0;return v to when{v>maximum->"INVALID";conf>=0.90->"CONFIRMED";else->"REVIEW_REQUIRED"}}
+/**
+ * Maps a configured broadsheet page to score cells. The page image passed to
+ * this class is already the corrected high-resolution master; preview frames
+ * are never used for score recognition.
+ */
+class BroadsheetProcessor(private val context: Context) {
+    data class ProcessOutput(
+        val readings: List<ScoreReadingEntity>,
+        val diagnosticFile: String?
+    )
+
+    private data class PixelRect(val left: Int, val top: Int, val right: Int, val bottom: Int) {
+        val width: Int get() = right - left
+        val height: Int get() = bottom - top
+    }
+
+    private data class PreparedCrop(
+        val bitmap: Bitmap,
+        val inkPixels: Int,
+        val inkRatio: Double,
+        val connectedComponents: Int,
+        val contrast: Double,
+        val blank: Boolean
+    )
+
+    fun process(bitmap: Bitmap, side: SheetPageTemplate, scanId: String): List<ScoreReadingEntity> =
+        processDetailed(bitmap, side, scanId, null, null).readings
+
+    /** Debug overload used by debug builds and physical-test diagnostics. */
+    fun process(
+        bitmap: Bitmap,
+        side: SheetPageTemplate,
+        scanId: String,
+        diagnosticDir: File?,
+        inputPath: String? = null
+    ): List<ScoreReadingEntity> = processDetailed(bitmap, side, scanId, diagnosticDir, inputPath).readings
+
+    fun processDetailed(
+        bitmap: Bitmap,
+        side: SheetPageTemplate,
+        scanId: String,
+        diagnosticDir: File?,
+        inputPath: String? = null
+    ): ProcessOutput {
+        diagnosticDir?.mkdirs()
+        val roiDir = (diagnosticDir?.let { File(it, "roi") }
+            ?: File(context.filesDir, "broadsheet-crops")).apply { mkdirs() }
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val diagnostics = JSONArray()
+        try {
+            if (diagnosticDir != null) {
+                saveInputArtifact(bitmap, inputPath, File(diagnosticDir, "01-input-scan.jpg"))
+                ImageProcessor.saveJpeg(bitmap, File(diagnosticDir, "02-canonical-page.jpg"), 98)
+                val overlay = renderTemplateOverlay(bitmap, side)
+                ImageProcessor.saveJpeg(overlay, File(diagnosticDir, "03-template-overlay.jpg"), 98)
+                ImageProcessor.saveJpeg(overlay, File(diagnosticDir, "template-overlay.jpg"), 98)
+                overlay.recycle()
+            }
+
+            val readings = side.rows.flatMap { row ->
+                row.rois.map { roi ->
+                    val prefix = "student-${row.rowNo.toString().padStart(3, '0')}-${safePart(roi.assessmentId)}"
+                    val scoreRect = pixelRect(roi.x, roi.y, roi.w, roi.h, side, bitmap)
+                    val scoreCrop = scoreRect?.let { Bitmap.createBitmap(bitmap, it.left, it.top, it.width, it.height) }
+                    val scorePrepared = scoreCrop?.let(::prepareCrop)
+                    val scoreSourcePath = scoreCrop?.let { crop ->
+                        val file = File(roiDir, "$prefix-source.jpg")
+                        ImageProcessor.saveJpeg(crop, file)
+                        file.absolutePath
+                    }
+                    val scorePreprocessedPath = scorePrepared?.let { prepared ->
+                        val file = File(roiDir, "$prefix-preprocessed.jpg")
+                        ImageProcessor.saveJpeg(prepared.bitmap, file)
+                        file.absolutePath
+                    }
+
+                    val observations = roi.digitBoxes.sortedBy { it.index }.map { digitBox ->
+                        recognizeDigit(
+                            bitmap = bitmap,
+                            side = side,
+                            digitBox = digitBox,
+                            recognizer = recognizer,
+                            outputDir = roiDir,
+                            prefix = prefix
+                        )
+                    }
+                    val roiInkPresent = scorePrepared?.blank == false
+                    val assembly = BroadsheetScoreAssembler.assemble(observations, roi.maximum, roiInkPresent)
+                    val reading = ScoreReadingEntity(
+                        id = UUID.randomUUID().toString(),
+                        sheetId = side.sheetId,
+                        sideId = side.pageId,
+                        scanId = scanId,
+                        studentId = row.studentId,
+                        studentName = row.studentName,
+                        assessmentId = roi.assessmentId,
+                        maximum = roi.maximum,
+                        rawValue = assembly.value,
+                        reviewedValue = assembly.value,
+                        confidence = assembly.confidence,
+                        state = assembly.state,
+                        cropPath = scoreSourcePath,
+                        reviewedAt = null
+                    )
+                    diagnostics.put(roiDiagnostic(row, roi, scoreRect, scorePrepared, scoreSourcePath, scorePreprocessedPath, observations, assembly))
+                    scorePrepared?.bitmap?.recycle()
+                    scoreCrop?.recycle()
+                    reading
+                }
+            }
+
+            val diagnosticFile = diagnosticDir?.let { directory ->
+                val output = JSONObject().apply {
+                    put("schema_version", "1.0")
+                    put("sheet_id", side.sheetId)
+                    put("page_id", side.pageId)
+                    put("layout_id", side.layoutId)
+                    put("layout_family", side.layoutFamily)
+                    put("template_version", side.templateVersion)
+                    put("coordinate_origin", side.coordinateOrigin)
+                    put("canonical_width", side.pageW)
+                    put("canonical_height", side.pageH)
+                    put("source_width", bitmap.width)
+                    put("source_height", bitmap.height)
+                    put("roi_count", diagnostics.length())
+                    put("rois", diagnostics)
+                }
+                File(directory, "diagnostic.json").also { it.writeText(output.toString(2)) }.absolutePath
+            }
+            return ProcessOutput(readings, diagnosticFile)
+        } finally {
+            recognizer.close()
+        }
+    }
+
+    private fun recognizeDigit(
+        bitmap: Bitmap,
+        side: SheetPageTemplate,
+        digitBox: DigitBoxDef,
+        recognizer: TextRecognizer,
+        outputDir: File,
+        prefix: String
+    ): DigitObservation {
+        val rect = pixelRect(digitBox.x, digitBox.y, digitBox.w, digitBox.h, side, bitmap)
+        if (rect == null) {
+            return DigitObservation(
+                index = digitBox.index,
+                value = null,
+                confidence = 0.0,
+                blank = false,
+                sourcePath = null,
+                preprocessedPath = null,
+                inkPixels = 0,
+                inkRatio = 0.0,
+                connectedComponents = 0,
+                contrast = 0.0,
+                rawOcrText = "",
+                normalizedOcrText = "",
+                alignmentValid = false
+            )
+        }
+
+        val sourceCrop = Bitmap.createBitmap(bitmap, rect.left, rect.top, rect.width, rect.height)
+        val prepared = prepareCrop(sourceCrop)
+        val sourceFile = File(outputDir, "$prefix-digit-${digitBox.index + 1}-source.jpg")
+        val preprocessedFile = File(outputDir, "$prefix-digit-${digitBox.index + 1}-preprocessed.jpg")
+        ImageProcessor.saveJpeg(sourceCrop, sourceFile)
+        ImageProcessor.saveJpeg(prepared.bitmap, preprocessedFile)
+
+        val guess = if (prepared.blank) {
+            DigitGuess(value = null, confidence = 1.0, blank = true)
+        } else {
+            MlKitDigitRecognizer(recognizer).recognize(prepared.bitmap)
+        }
+        val observation = DigitObservation(
+            index = digitBox.index,
+            value = guess.value,
+            confidence = guess.confidence,
+            blank = prepared.blank,
+            sourcePath = sourceFile.absolutePath,
+            preprocessedPath = preprocessedFile.absolutePath,
+            inkPixels = prepared.inkPixels,
+            inkRatio = prepared.inkRatio,
+            connectedComponents = prepared.connectedComponents,
+            contrast = prepared.contrast,
+            rawOcrText = guess.rawText,
+            normalizedOcrText = guess.normalizedText
+        )
+        prepared.bitmap.recycle()
+        sourceCrop.recycle()
+        return observation
+    }
+
+    /**
+     * Remove long printed border lines while retaining components that touch a
+     * crop edge. The latter matters for real handwriting written close to a
+     * box boundary.
+     */
+    private fun prepareCrop(source: Bitmap): PreparedCrop {
+        val rgba = Mat()
+        val gray = Mat()
+        val binary = Mat()
+        val horizontal = Mat()
+        val vertical = Mat()
+        val withoutHorizontal = Mat()
+        val cleaned = Mat()
+        val labels = Mat()
+        val stats = Mat()
+        val centroids = Mat()
+        try {
+            Utils.bitmapToMat(source, rgba)
+            Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY)
+            Imgproc.threshold(gray, binary, 0.0, 255.0, Imgproc.THRESH_BINARY_INV + Imgproc.THRESH_OTSU)
+
+            val horizontalKernel = Imgproc.getStructuringElement(
+                Imgproc.MORPH_RECT,
+                Size(max(3, (binary.cols() * 0.55).roundToInt()).toDouble(), 1.0)
+            )
+            val verticalKernel = Imgproc.getStructuringElement(
+                Imgproc.MORPH_RECT,
+                Size(1.0, max(3, (binary.rows() * 0.55).roundToInt()).toDouble())
+            )
+            try {
+                Imgproc.morphologyEx(binary, horizontal, Imgproc.MORPH_OPEN, horizontalKernel)
+                Core.subtract(binary, horizontal, withoutHorizontal)
+                Imgproc.morphologyEx(withoutHorizontal, vertical, Imgproc.MORPH_OPEN, verticalKernel)
+                Core.subtract(withoutHorizontal, vertical, cleaned)
+            } finally {
+                horizontalKernel.release()
+                verticalKernel.release()
+            }
+
+            // Suppress only the outermost pixel. Printed lines are removed by
+            // the long-line pass; this one-pixel mask avoids a residual frame
+            // without erasing a handwritten stroke near that frame.
+            if (cleaned.cols() > 2 && cleaned.rows() > 2) {
+                Imgproc.rectangle(
+                    cleaned,
+                    org.opencv.core.Point(0.0, 0.0),
+                    org.opencv.core.Point((cleaned.cols() - 1).toDouble(), (cleaned.rows() - 1).toDouble()),
+                    Scalar(0.0),
+                    1
+                )
+            }
+
+            val componentCount = Imgproc.connectedComponentsWithStats(cleaned, labels, stats, centroids)
+            val totalPixels = (cleaned.cols() * cleaned.rows()).coerceAtLeast(1)
+            val minComponentArea = max(2.0, totalPixels * 0.0008).roundToInt()
+            val kept = Mat.zeros(cleaned.size(), CvType.CV_8UC1)
+            var keptComponents = 0
+            try {
+                for (label in 1 until componentCount) {
+                    val area = stats.get(label, Imgproc.CC_STAT_AREA)?.firstOrNull()?.roundToInt() ?: 0
+                    if (area >= minComponentArea) {
+                        val mask = Mat()
+                        try {
+                            Core.inRange(labels, Scalar(label.toDouble()), Scalar(label.toDouble()), mask)
+                            kept.setTo(Scalar(255.0), mask)
+                            keptComponents++
+                        } finally {
+                            mask.release()
+                        }
+                    }
+                }
+
+                val inkPixels = Core.countNonZero(kept)
+                val inkRatio = inkPixels.toDouble() / totalPixels.toDouble()
+                val mean = org.opencv.core.MatOfDouble()
+                val std = org.opencv.core.MatOfDouble()
+                try {
+                    Core.meanStdDev(gray, mean, std)
+                    val contrast = std.toArray().firstOrNull() ?: 0.0
+                    val blank = inkPixels < max(3, (totalPixels * 0.003).roundToInt())
+                    val normalized = Mat()
+                    val resized = Mat()
+                    try {
+                        // White background + black foreground is the format the
+                        // current recognizer expects.
+                        Core.bitwise_not(kept, normalized)
+                        val target = 220
+                        val scale = min(
+                            (target - 24).toDouble() / normalized.cols().coerceAtLeast(1),
+                            (target - 24).toDouble() / normalized.rows().coerceAtLeast(1)
+                        ).coerceAtLeast(0.1)
+                        val resizedWidth = max(2, (normalized.cols() * scale).roundToInt())
+                        val resizedHeight = max(2, (normalized.rows() * scale).roundToInt())
+                        Imgproc.resize(normalized, resized, Size(resizedWidth.toDouble(), resizedHeight.toDouble()), 0.0, 0.0, Imgproc.INTER_CUBIC)
+                        val padded = Mat.zeros(target, target, CvType.CV_8UC1)
+                        padded.setTo(Scalar(255.0))
+                        val x = (target - resized.cols()) / 2
+                        val y = (target - resized.rows()) / 2
+                        val destination = padded.submat(y, y + resized.rows(), x, x + resized.cols())
+                        try {
+                            resized.copyTo(destination)
+                        } finally {
+                            destination.release()
+                        }
+                        val rgbaOut = Mat()
+                        try {
+                            Imgproc.cvtColor(padded, rgbaOut, Imgproc.COLOR_GRAY2RGBA)
+                            val output = Bitmap.createBitmap(target, target, Bitmap.Config.ARGB_8888)
+                            Utils.matToBitmap(rgbaOut, output)
+                            return PreparedCrop(output, inkPixels, inkRatio, keptComponents, contrast, blank)
+                        } finally {
+                            rgbaOut.release()
+                            padded.release()
+                        }
+                    } finally {
+                        normalized.release()
+                        resized.release()
+                    }
+                } finally {
+                    mean.release()
+                    std.release()
+                }
+            } finally {
+                kept.release()
+            }
+        } finally {
+            rgba.release()
+            gray.release()
+            binary.release()
+            horizontal.release()
+            vertical.release()
+            withoutHorizontal.release()
+            cleaned.release()
+            labels.release()
+            stats.release()
+            centroids.release()
+        }
+    }
+
+    private fun pixelRect(x: Double, y: Double, w: Double, h: Double, side: SheetPageTemplate, bitmap: Bitmap): PixelRect? {
+        if (side.pageW <= 0.0 || side.pageH <= 0.0 || w <= 0.0 || h <= 0.0 || bitmap.width < 2 || bitmap.height < 2) return null
+        val left = (x / side.pageW * bitmap.width).roundToInt()
+        val right = ((x + w) / side.pageW * bitmap.width).roundToInt()
+        val topFraction = if (side.coordinateOrigin.equals("TOP_LEFT", true)) y / side.pageH else (side.pageH - (y + h)) / side.pageH
+        val bottomFraction = if (side.coordinateOrigin.equals("TOP_LEFT", true)) (y + h) / side.pageH else (side.pageH - y) / side.pageH
+        val top = (topFraction * bitmap.height).roundToInt()
+        val bottom = (bottomFraction * bitmap.height).roundToInt()
+        val safeLeft = left.coerceIn(0, bitmap.width - 1)
+        val safeTop = top.coerceIn(0, bitmap.height - 1)
+        val safeRight = right.coerceIn(safeLeft + 1, bitmap.width)
+        val safeBottom = bottom.coerceIn(safeTop + 1, bitmap.height)
+        if (safeRight - safeLeft < 2 || safeBottom - safeTop < 2) return null
+        return PixelRect(safeLeft, safeTop, safeRight, safeBottom)
+    }
+
+    private fun renderTemplateOverlay(bitmap: Bitmap, side: SheetPageTemplate): Bitmap {
+        val output = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = Canvas(output)
+        val roiPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = max(2f, min(output.width, output.height) / 700f)
+            color = Color.rgb(0, 150, 255)
+        }
+        val digitPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = max(1.5f, min(output.width, output.height) / 1100f)
+            color = Color.rgb(255, 40, 160)
+        }
+        val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = Color.rgb(0, 70, 160)
+            textSize = max(10f, min(output.width, output.height) / 120f)
+        }
+        side.rows.forEach { row ->
+            row.rois.forEach { roi ->
+                pixelRect(roi.x, roi.y, roi.w, roi.h, side, output)?.let { rect ->
+                    canvas.drawRect(RectF(rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat()), roiPaint)
+                    canvas.drawText("${row.rowNo}/${roi.assessmentId}", rect.left.toFloat(), (rect.top - 2).coerceAtLeast(labelPaint.textSize), labelPaint)
+                }
+                roi.digitBoxes.forEach { digit ->
+                    pixelRect(digit.x, digit.y, digit.w, digit.h, side, output)?.let { rect ->
+                        canvas.drawRect(RectF(rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat()), digitPaint)
+                    }
+                }
+            }
+        }
+        return output
+    }
+
+    private fun roiDiagnostic(
+        row: RowDef,
+        roi: ScoreRoiDef,
+        pixelRect: PixelRect?,
+        prepared: PreparedCrop?,
+        sourcePath: String?,
+        preprocessedPath: String?,
+        observations: List<DigitObservation>,
+        assembly: ScoreAssembly
+    ): JSONObject = JSONObject().apply {
+        put("student", JSONObject().apply {
+            put("row", row.rowNo)
+            put("student_id", row.studentId)
+            put("student_name", row.studentName)
+        })
+        put("assessment", roi.assessmentId)
+        put("maximum", roi.maximum)
+        put("expected_roi_coordinates", JSONObject().apply {
+            put("x", roi.x)
+            put("y", roi.y)
+            put("w", roi.w)
+            put("h", roi.h)
+            put("coordinate_origin", "template")
+        })
+        put("mapped_pixel_roi", pixelRect?.let {
+            JSONObject().apply {
+                put("x", it.left)
+                put("y", it.top)
+                put("w", it.width)
+                put("h", it.height)
+            }
+        } ?: JSONObject.NULL)
+        put("source_crop", sourcePath ?: JSONObject.NULL)
+        put("preprocessed_crop", preprocessedPath ?: JSONObject.NULL)
+        put("ink_pixels", prepared?.inkPixels ?: 0)
+        put("ink_ratio", prepared?.inkRatio ?: 0.0)
+        put("connected_components", prepared?.connectedComponents ?: 0)
+        put("contrast", prepared?.contrast ?: 0.0)
+        put("blank_score", if (prepared?.blank == true) 1.0 else 0.0)
+        put("recognition_state", assembly.state)
+        put("final_value", assembly.value ?: JSONObject.NULL)
+        put("confidence", assembly.confidence)
+        put("validation_result", validationResult(assembly, prepared))
+        put("digits", JSONArray().apply {
+            observations.sortedBy { it.index }.forEach { digit ->
+                put(JSONObject().apply {
+                    put("index", digit.index)
+                    put("value", digit.value ?: JSONObject.NULL)
+                    put("confidence", digit.confidence)
+                    put("blank", digit.blank)
+                    put("alignment_valid", digit.alignmentValid)
+                    put("source_crop", digit.sourcePath ?: JSONObject.NULL)
+                    put("preprocessed_crop", digit.preprocessedPath ?: JSONObject.NULL)
+                    put("ink_pixels", digit.inkPixels)
+                    put("ink_ratio", digit.inkRatio)
+                    put("connected_components", digit.connectedComponents)
+                    put("contrast", digit.contrast)
+                    put("raw_ocr_text", digit.rawOcrText)
+                    put("normalized_ocr_text", digit.normalizedOcrText)
+                })
+            }
+        })
+    }
+
+    private fun validationResult(assembly: ScoreAssembly, prepared: PreparedCrop?): String = when {
+        assembly.state == "MISALIGNED" -> "ALIGNMENT_NOT_AVAILABLE"
+        assembly.state == "INVALID" -> "OVER_MAXIMUM"
+        assembly.state == "BLANK" -> "NO_INK"
+        assembly.state == "DOUBTFUL" && prepared?.blank == false -> "INK_UNRECOGNIZED_OR_LOW_CONFIDENCE"
+        assembly.state == "CONFIRMED" -> "WITHIN_MAXIMUM"
+        else -> assembly.state
+    }
+
+    private fun saveInputArtifact(bitmap: Bitmap, inputPath: String?, output: File) {
+        val source = inputPath?.let(::File)
+        if (source?.exists() == true) source.copyTo(output, overwrite = true)
+        else ImageProcessor.saveJpeg(bitmap, output, 98)
+    }
+
+    private fun safePart(value: String): String = value.replace(Regex("[^A-Za-z0-9._-]"), "_").lowercase()
 }

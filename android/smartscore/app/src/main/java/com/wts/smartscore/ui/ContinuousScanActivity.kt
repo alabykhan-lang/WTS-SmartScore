@@ -31,6 +31,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.wts.smartscore.BuildConfig
 import com.wts.smartscore.model.ScanState
 import com.wts.smartscore.scanner.AutoCaptureController
@@ -75,6 +78,10 @@ class ContinuousScanActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Target SDK 35 uses edge-to-edge by default. Keep the camera immersive,
+        // but explicitly inset the status/header and action bar at runtime so
+        // both gesture and three-button navigation areas are respected.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         debugMode = BuildConfig.DEBUG && intent.getBooleanExtra(EXTRA_DEBUG, false)
         buildUi()
         processor = ContinuousSessionProcessor(
@@ -156,6 +163,15 @@ class ContinuousScanActivity : AppCompatActivity() {
         actions.addView(finishButton, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(actions)
         setContentView(root)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            top.setPadding(18, 20 + bars.top, 18, 14)
+            actions.setPadding(12, 12, 12, 18 + bars.bottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(root)
     }
 
     private fun initializeScanner() {
@@ -247,7 +263,11 @@ class ContinuousScanActivity : AppCompatActivity() {
             append("aspect=${number(a.aspectRatio.toDouble())}:1 edge=${pct(a.edgeMargin)}\n")
             append("blur=${number(a.blurScore)} glare=${number(a.glare)} ")
             append("stability=${number(a.stabilityScore.toDouble())} stable=${a.stable}\n")
+            append("candidates=${a.candidateCount} selected=${number(a.selectedCandidateScore.toDouble())}\n")
             append("block=${controller.blockReason}")
+            a.candidateDiagnostics.firstOrNull { !it.accepted }?.let {
+                append("\nrejected=${it.method}:${it.rejectionReason ?: "unspecified"}")
+            }
             lastAnalysisError?.let { append("\nerror=$it") }
         }
     }

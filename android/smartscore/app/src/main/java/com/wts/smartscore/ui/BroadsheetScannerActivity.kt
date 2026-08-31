@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
+import com.wts.smartscore.BuildConfig
 import com.wts.smartscore.data.BroadsheetEntity
 import com.wts.smartscore.data.ScanEntity
 import com.wts.smartscore.data.SheetSideEntity
@@ -92,9 +93,10 @@ class BroadsheetScannerActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeFile(path)
                 val identity = try { if (bitmap != null) SheetIdentityResolver.resolvePageIdentity(bitmap) else null } catch (t: Throwable) { Log.w(TAG, "QR identity unavailable", t); null } finally { bitmap?.recycle() }
                 val ocr = runCatching { ScriptIdentityExtractor.extractText(this, path) }.getOrDefault("")
-                val qrPage = identity?.pageId?.uppercase()?.let(repo::pageById)
-                val ocrPageId = Regex("(?i)(WTS-[A-Z0-9-]+)-(?:P|S)([0-9]+)").find(ocr)?.value
-                    ?.uppercase()?.replace(Regex("-S([0-9]+)$"), "-P$1")
+                val qrPage = identity?.let(repo::pageForIdentity)
+                val ocrPageId = Regex("(?i)((?:WTS|SMB)-[A-Z0-9-]+)-(?:P|S)([0-9]+)").find(ocr)?.let {
+                    "${it.groupValues[1].uppercase()}-P${it.groupValues[2]}"
+                }
                 val ocrPage = ocrPageId?.let(repo::pageById)
                 val orderedPage = qrPage ?: ocrPage ?: pageFromPrintedHeading(ocr, number, pages.size)
                 Candidate(number, path, orderedPage?.pageId, when {
@@ -155,7 +157,10 @@ class BroadsheetScannerActivity : AppCompatActivity() {
                     ImageProcessor.saveJpeg(canonical, canonicalFile)
                     val scanId = UUID.randomUUID().toString()
                     val started = System.currentTimeMillis()
-                    val readings = BroadsheetProcessor(this).process(canonical, page, scanId)
+                    val debugDirectory = if (BuildConfig.DEBUG) {
+                        File(filesDir, "broadsheets/debug/${page.pageId}-${candidate.scanPageNumber}-${System.currentTimeMillis()}").apply { mkdirs() }
+                    } else null
+                    val readings = BroadsheetProcessor(this).process(canonical, page, scanId, debugDirectory, candidate.imagePath)
                     processed += Processed(page, scanId, candidate.imagePath, canonicalFile.absolutePath, readings, System.currentTimeMillis() - started, candidate.method)
                     canonical.recycle()
                 }

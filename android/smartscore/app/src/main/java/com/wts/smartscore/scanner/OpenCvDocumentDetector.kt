@@ -13,17 +13,21 @@ import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import kotlin.math.abs
+import kotlin.math.exp
 import kotlin.math.hypot
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.round
+import kotlin.math.roundToInt
 
 /**
  * Fast, orientation-aware document boundary detection for the continuous camera.
  *
- * The detector intentionally works on a downscaled analysis frame. The final page is
- * always taken from ImageCapture and is normalized later at full resolution.
+ * Analysis frames are intentionally downscaled for speed, but the returned
+ * quadrilateral is expressed in the full oriented frame. The final page is
+ * always taken from ImageCapture and is detected again at capture resolution.
  */
 class OpenCvDocumentDetector(
     private val maxAnalysisDimension: Int = 960
@@ -31,11 +35,38 @@ class OpenCvDocumentDetector(
     companion object {
         private const val STABLE_DELTA_FRACTION = 0.018f
         private const val MIN_CONTOUR_AREA_FRACTION = 0.035f
+        private const val MAX_PLAUSIBLE_ASPECT = 4.5f
+        private const val MIN_RECTANGULARITY = 0.50f
     }
 
     private data class Candidate(
         val points: Array<Point>,
         val method: String
+    )
+
+    private data class BaseEvaluation(
+        val candidate: Candidate,
+        val quad: Quad,
+        val areaFraction: Float,
+        val aspectRatio: Float,
+        val rectangularity: Float,
+        val edgeMargin: Float,
+        val boundaryContrast: Float,
+        val rejectionReason: String?
+    )
+
+    private data class Evaluation(
+        val base: BaseEvaluation,
+        val containedCandidateCount: Int,
+        val largestContainedFraction: Float,
+        val score: Float,
+        val accepted: Boolean
+    )
+
+    private data class Selection(
+        val selected: Evaluation?,
+        val candidateCount: Int,
+        val diagnostics: List<CandidateDiagnostic>
     )
 
     private var previous: Quad? = null
@@ -44,9 +75,8 @@ class OpenCvDocumentDetector(
     private var stableFrames = 0
 
     /**
-     * @param rotationDegrees ImageProxy.imageInfo.rotationDegrees. The returned quad is
-     * in display-oriented coordinates, which is also the coordinate space used by the
-     * PreviewView overlay.
+     * @param rotationDegrees ImageProxy.imageInfo.rotationDegrees. The returned
+     * quad is in display-oriented coordinates used by PreviewView.
      */
     fun detect(gray: Mat, rotationDegrees: Int = 0): FrameAssessment {
         require(!gray.empty()) { "Cannot detect a document in an empty frame" }
@@ -73,10 +103,11 @@ class OpenCvDocumentDetector(
                 collectEdgeCandidates(small, candidates)
                 collectThresholdCandidates(small, candidates)
 
-                val best = chooseCandidate(candidates, small.cols(), small.rows())
-                val q = best?.let {
-                    orderedQuad(
-                        it.points,
+                val selection = chooseCandidate(candidates, small.cols(), small.rows(), small)
+                val best = selection.selected
+                val q = best?.base?.quad?.let {
+                    scaleQuad(
+                        it,
                         frameWidth.toFloat() / small.cols().toFloat(),
                         frameHeight.toFloat() / small.rows().toFloat()
                     )
@@ -96,7 +127,7 @@ class OpenCvDocumentDetector(
                     blurScore = blurScore,
                     stable = stability.first,
                     glare = glare,
-                    stateHint = best?.method ?: "NO_QUADRILATERAL",
+                    stateHint = best?.base?.candidate?.method ?: "NO_QUADRILATERAL",
                     frameWidth = frameWidth,
                     frameHeight = frameHeight,
                     pageWidthFraction = pageWidthFraction.coerceIn(0f, 1.5f),
@@ -104,8 +135,11 @@ class OpenCvDocumentDetector(
                     aspectRatio = aspectRatio,
                     edgeMargin = edgeMargin,
                     stabilityScore = stability.second,
-                    detectorMethod = best?.method ?: "NONE",
-                    rotationDegrees = ((rotationDegrees % 360) + 360) % 360
+                    detectorMethod = best?.base?.candidate?.method ?: "NONE",
+                    rotationDegrees = ((rotationDegrees % 360) + 360) % 360,
+                    candidateCount = selection.candidateCount,
+                    selectedCandidateScore = best?.score ?: 0f,
+                    candidateDiagnostics = selection.diagnostics
                 )
             } finally {
                 small.release()
@@ -131,12 +165,15 @@ class OpenCvDocumentDetector(
         val blurred = Mat()
         val edges = Mat()
         val closed = Mat()
-        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(7.0, 7.0))
+        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(9.0, 9.0))
         try {
             Imgproc.GaussianBlur(small, blurred, Size(5.0, 5.0), 0.0)
             Imgproc.Canny(blurred, edges, 40.0, 120.0)
             collectContours(edges, "CANNY", candidates)
-            Imgproc.morphologyEx(edges, closed, Imgproc.MORPH_CLOSE, kernel, Point(-1.0, -1.0), 2)
+            // Connecting broken outer-page edges helps when paper is slightly
+            // curved or a corner is softened by shadow. Internal table lines are
+            // later penalised by boundary and enclosure evidence.
+            Imgproc.morphologyEx(edges, closed, Imgproc.MORPH_CLOSE, kernel, Point(-1.0, -1.0), 3)
             collectContours(closed, "CANNY_CLOSED", candidates)
         } finally {
             blurred.release()
@@ -150,12 +187,11 @@ class OpenCvDocumentDetector(
         val binary = Mat()
         val inverted = Mat()
         val closedBinary = Mat()
-        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(9.0, 9.0))
+        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(11.0, 11.0))
         try {
             // A white sheet on a darker desk is often invisible to a single Canny pass.
-            // Otsu creates a second, contrast-adaptive route for that ordinary setup.
             Imgproc.threshold(small, binary, 0.0, 255.0, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU)
-            Imgproc.morphologyEx(binary, closedBinary, Imgproc.MORPH_CLOSE, kernel, Point(-1.0, -1.0), 1)
+            Imgproc.morphologyEx(binary, closedBinary, Imgproc.MORPH_CLOSE, kernel, Point(-1.0, -1.0), 2)
             collectContours(closedBinary, "OTSU_PAGE", candidates)
 
             Core.bitwise_not(binary, inverted)
@@ -172,7 +208,10 @@ class OpenCvDocumentDetector(
         val contours = mutableListOf<MatOfPoint>()
         val hierarchy = Mat()
         try {
-            Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
+            // RETR_TREE keeps the nested structure available to the selector's
+            // geometric containment pass, even though the final decision is not
+            // based on raw contour area alone.
+            Imgproc.findContours(mask, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
             contours.forEach { contour ->
                 try {
                     val source = contour.toArray()
@@ -218,7 +257,7 @@ class OpenCvDocumentDetector(
             Imgproc.convexHull(contour, hullIndices)
             val indices = hullIndices.toArray()
             if (indices.size < 4) return
-            val hullPoints = indices.map { index -> source[index] }.toTypedArray()
+            val hullPoints = indices.mapNotNull { index -> source.getOrNull(index) }.toTypedArray()
             if (hullPoints.size >= 4) addApproximations(hullPoints, "${method}_HULL", candidates)
         } finally {
             contour.release()
@@ -226,25 +265,149 @@ class OpenCvDocumentDetector(
         }
     }
 
-    private fun chooseCandidate(candidates: List<Candidate>, width: Int, height: Int): Candidate? {
-        return candidates
-            .asSequence()
-            .map { candidate -> candidate to orderedQuad(candidate.points, 1f, 1f) }
-            .filter { (_, q) -> q.area() / (width.toFloat() * height.toFloat()).coerceAtLeast(1f) >= MIN_CONTOUR_AREA_FRACTION }
-            .filter { (_, q) -> q.edgeMargin(width, height) > 0.002f || q.area() / (width.toFloat() * height.toFloat()).coerceAtLeast(1f) < 0.95f }
-            .maxByOrNull { (_, q) ->
-                val fraction = q.area() / (width.toFloat() * height.toFloat()).coerceAtLeast(1f)
-                val rectangleArea = (q.width() * q.height()).coerceAtLeast(1f)
-                val rectangularity = (q.area() / rectangleArea).coerceIn(0f, 1f)
-                val margin = q.edgeMargin(width, height)
-                val edgePenalty = when {
-                    margin < 0.002f -> 0.15f
-                    margin < 0.008f -> 0.65f
-                    else -> 1f
-                }
-                fraction * (0.62 + rectangularity * 0.38) * edgePenalty
+    /**
+     * Select the physical page, not merely the largest dark rectangle. The
+     * selector combines paper-like aspect, outer-edge contrast, usable area and
+     * whether the candidate encloses substantial internal page structure.
+     */
+    private fun chooseCandidate(candidates: List<Candidate>, width: Int, height: Int, gray: Mat): Selection {
+        val unique = candidates
+            .mapNotNull { candidate ->
+                if (candidate.points.distinctBy { "${round(it.x / 3.0)}:${round(it.y / 3.0)}" }.size < 4) null
+                else candidate to orderedQuad(candidate.points, 1f, 1f)
             }
-            ?.first
+            .distinctBy { (_, q) -> quadSignature(q) }
+            .take(180)
+
+        val imageArea = (width.toFloat() * height.toFloat()).coerceAtLeast(1f)
+        val bases = unique.map { (candidate, quad) ->
+            val areaFraction = (quad.area() / imageArea).coerceIn(0f, 2f)
+            val rectangleArea = (quad.width() * quad.height()).coerceAtLeast(1f)
+            val rectangularity = (quad.area() / rectangleArea).coerceIn(0f, 1f)
+            val aspect = quad.aspectRatio()
+            val edgeMargin = quad.edgeMargin(width, height)
+            val boundaryContrast = boundaryContrast(gray, quad)
+            val reasons = mutableListOf<String>()
+            if (areaFraction < MIN_CONTOUR_AREA_FRACTION) reasons += "AREA_TOO_SMALL"
+            if (aspect < 1.05f || aspect > MAX_PLAUSIBLE_ASPECT) reasons += "ASPECT_IMPLAUSIBLE"
+            if (rectangularity < MIN_RECTANGULARITY) reasons += "QUADRILATERAL_NOT_RECTANGULAR"
+            if (edgeMargin < 0.0015f && areaFraction > 0.80f) reasons += "CLIPPED_AT_FRAME_EDGE"
+            BaseEvaluation(candidate, quad, areaFraction, aspect, rectangularity, edgeMargin, boundaryContrast, reasons.takeIf { it.isNotEmpty() }?.joinToString("|"))
+        }
+
+        val evaluations = bases.map { base ->
+            val contained = bases.filter { inner ->
+                inner !== base &&
+                    inner.areaFraction < base.areaFraction * 0.92f &&
+                    inner.quad.area() > imageArea * 0.012f &&
+                    contains(base.quad, inner.quad)
+            }
+            val largestContainedFraction = contained.maxOfOrNull { it.areaFraction / base.areaFraction.coerceAtLeast(0.001f) } ?: 0f
+            val enclosureScore = (
+                (largestContainedFraction / 0.55f).coerceIn(0f, 1f) * 0.75f +
+                    (contained.size.coerceAtMost(3) / 3f) * 0.25f
+                ).coerceIn(0f, 1f)
+            val sizeScore = base.areaFraction.coerceIn(0f, 1f).toDouble().pow(0.5).toFloat()
+            val aspectScore = exp(-abs(ln((base.aspectRatio / 1.4142f).coerceAtLeast(0.01f).toDouble())) / 0.75).toFloat().coerceIn(0f, 1f)
+            val boundaryScore = (base.boundaryContrast / 70f).coerceIn(0f, 1f)
+            val edgeScore = when {
+                base.edgeMargin < 0.0015f -> 0f
+                base.edgeMargin < 0.010f -> 0.45f
+                else -> 1f
+            }
+            val score = (
+                // Shape and enclosing evidence deliberately outweigh a strong
+                // internal table line: the latter was the physical-test
+                // failure that produced a partial blue polygon.
+                sizeScore * 0.26f +
+                    base.rectangularity * 0.14f +
+                    aspectScore * 0.22f +
+                    boundaryScore * 0.18f +
+                    enclosureScore * 0.17f +
+                    edgeScore * 0.03f
+                ).coerceIn(0f, 1f)
+            Evaluation(base, contained.size, largestContainedFraction, score, base.rejectionReason == null)
+        }
+
+        val selected = evaluations.filter { it.accepted }.maxByOrNull { it.score }
+        val diagnostics = evaluations
+            .sortedByDescending { it.score }
+            .take(16)
+            .map { evaluation ->
+                val base = evaluation.base
+                CandidateDiagnostic(
+                    method = base.candidate.method,
+                    areaFraction = base.areaFraction,
+                    aspectRatio = base.aspectRatio,
+                    rectangularity = base.rectangularity,
+                    edgeMargin = base.edgeMargin,
+                    boundaryContrast = base.boundaryContrast,
+                    containedCandidateCount = evaluation.containedCandidateCount,
+                    largestContainedFraction = evaluation.largestContainedFraction,
+                    score = evaluation.score,
+                    accepted = evaluation.accepted,
+                    selected = evaluation === selected,
+                    rejectionReason = base.rejectionReason
+                )
+            }
+        return Selection(selected, unique.size, diagnostics)
+    }
+
+    private fun quadSignature(q: Quad): String = listOf(q.tl, q.tr, q.br, q.bl)
+        .joinToString("|") { "${round(it.x / 3.0)}:${round(it.y / 3.0)}" }
+
+    private fun scaleQuad(q: Quad, sx: Float, sy: Float): Quad = Quad(
+        PointF(q.tl.x * sx, q.tl.y * sy),
+        PointF(q.tr.x * sx, q.tr.y * sy),
+        PointF(q.br.x * sx, q.br.y * sy),
+        PointF(q.bl.x * sx, q.bl.y * sy)
+    )
+
+    private fun contains(container: Quad, inner: Quad): Boolean = listOf(inner.tl, inner.tr, inner.br, inner.bl).all { pointInside(container, it) }
+
+    private fun pointInside(q: Quad, point: PointF): Boolean {
+        val points = listOf(q.tl, q.tr, q.br, q.bl)
+        var sign = 0
+        for (i in points.indices) {
+            val a = points[i]
+            val b = points[(i + 1) % points.size]
+            val cross = (b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)
+            if (abs(cross) < 0.5f) continue
+            val current = if (cross > 0f) 1 else -1
+            if (sign == 0) sign = current else if (sign != current) return false
+        }
+        return true
+    }
+
+    /** Contrast across the candidate edge: paper boundary tends to separate desk and page. */
+    private fun boundaryContrast(gray: Mat, q: Quad): Float {
+        val points = listOf(q.tl, q.tr, q.br, q.bl)
+        val centerX = points.map { it.x }.average().toFloat()
+        val centerY = points.map { it.y }.average().toFloat()
+        val distance = max(2.0, min(gray.cols(), gray.rows()).toDouble() * 0.012)
+        val contrasts = points.indices.mapNotNull { i ->
+            val a = points[i]
+            val b = points[(i + 1) % points.size]
+            val midX = (a.x + b.x) / 2f
+            val midY = (a.y + b.y) / 2f
+            val inwardX = centerX - midX
+            val inwardY = centerY - midY
+            val length = hypot(inwardX.toDouble(), inwardY.toDouble())
+            if (length < 1.0) null else {
+                val outwardX = -inwardX / length.toFloat()
+                val outwardY = -inwardY / length.toFloat()
+                val outside = grayAt(gray, midX + outwardX * distance, midY + outwardY * distance)
+                val inside = grayAt(gray, midX - outwardX * distance, midY - outwardY * distance)
+                abs(outside - inside)
+            }
+        }
+        return contrasts.ifEmpty { listOf(0.0) }.average().toFloat().coerceIn(0f, 255f)
+    }
+
+    private fun grayAt(gray: Mat, x: Double, y: Double): Double {
+        val px = x.roundToInt().coerceIn(0, gray.cols() - 1)
+        val py = y.roundToInt().coerceIn(0, gray.rows() - 1)
+        return gray.get(py, px)?.firstOrNull() ?: 0.0
     }
 
     private fun isConvex(points: Array<Point>): Boolean {
@@ -272,9 +435,9 @@ class OpenCvDocumentDetector(
     }
 
     /**
-     * Global white-pixel percentage is not glare: an ordinary white sheet is expected to
-     * contain many clipped-looking pixels. This score only reports clipped highlights
-     * inside the page and suppresses a uniformly white page baseline.
+     * Global white-pixel percentage is not glare: an ordinary white sheet is
+     * expected to contain many bright pixels. This score only reports clipped
+     * highlights inside the selected page.
      */
     private fun glareScore(small: Mat, q: Quad?, scale: Double): Double {
         if (q == null) return 0.0

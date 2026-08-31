@@ -61,9 +61,18 @@ object SheetIdentityResolver {
                 rawValue = raw
             )
         }
-        val match = Regex("(?i)(WTS-[A-Z0-9-]+)-(?:P|S)([0-9]+)").find(raw) ?: return null
-        val sheet = match.groupValues[1]
-        val page = match.groupValues[0].uppercase().replace(Regex("-S([0-9]+)$"), "-P$1")
-        return SheetPageIdentity(sheet, page, match.groupValues[2].toIntOrNull(), null, null, null, null, null, "QR_LEGACY", 0.82, raw)
+        val pageMatch = Regex("(?i)((?:WTS|SMB)-[A-Z0-9-]+)-(?:P|S)([0-9]+)").find(raw)
+        if (pageMatch != null) {
+            val sheet = pageMatch.groupValues[1].uppercase()
+            val page = "${sheet}-P${pageMatch.groupValues[2]}"
+            return SheetPageIdentity(sheet, page, pageMatch.groupValues[2].toIntOrNull(), null, null, null, null, null, "QR_LEGACY", 0.82, raw)
+        }
+
+        // Some locally printed one-page fixtures carry only the deterministic
+        // sheet id. That is still useful identity evidence; the repository can
+        // resolve it to its sole page without inventing a duplex side.
+        val sheetMatch = Regex("(?i)((?:WTS|SMB)-[A-Z0-9-]+)").find(raw) ?: return null
+        val sheet = sheetMatch.groupValues[1].uppercase()
+        return SheetPageIdentity(sheet, null, null, null, null, null, null, null, "QR_SHEET_ID", 0.74, raw)
     }
 }

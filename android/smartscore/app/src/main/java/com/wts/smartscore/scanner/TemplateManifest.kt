@@ -44,7 +44,9 @@ data class SheetPageTemplate(
     val layoutId: String,
     val layoutFamily: String,
     val subjectGroup: String,
-    val templateVersion: String
+    val templateVersion: String,
+    /** Template coordinates may come from PDF bottom-left or image top-left. */
+    val coordinateOrigin: String = "BOTTOM_LEFT"
 ) {
     // Compatibility accessors for the pre-v3 scanner code. These are page
     // identities now; they are not a duplex/side requirement.
@@ -94,6 +96,7 @@ data class TemplateManifest(
                     put("layout_family", page.layoutFamily)
                     put("subject_group", page.subjectGroup)
                     put("template_version", page.templateVersion)
+                    put("coordinate_origin", page.coordinateOrigin)
                     put("rows", JSONArray().apply {
                         page.rows.forEach { row ->
                             put(JSONObject().apply {

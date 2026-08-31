@@ -65,5 +65,24 @@ data class FrameAssessment(
     val edgeMargin: Float = 1f,
     val stabilityScore: Float = 0f,
     val detectorMethod: String = "NONE",
-    val rotationDegrees: Int = 0
+    val rotationDegrees: Int = 0,
+    val candidateCount: Int = 0,
+    val selectedCandidateScore: Float = 0f,
+    val candidateDiagnostics: List<CandidateDiagnostic> = emptyList()
+)
+
+/** Debug-only explanation of why a document candidate was selected or rejected. */
+data class CandidateDiagnostic(
+    val method: String,
+    val areaFraction: Float,
+    val aspectRatio: Float,
+    val rectangularity: Float,
+    val edgeMargin: Float,
+    val boundaryContrast: Float,
+    val containedCandidateCount: Int,
+    val largestContainedFraction: Float,
+    val score: Float,
+    val accepted: Boolean,
+    val selected: Boolean,
+    val rejectionReason: String?
 )

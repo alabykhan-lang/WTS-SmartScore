@@ -11,6 +11,7 @@ import com.wts.smartscore.data.SmartScoreDatabase
 import com.wts.smartscore.export.DocxExporter
 import com.wts.smartscore.export.ImageZipExporter
 import com.wts.smartscore.export.PdfImageExporter
+import com.wts.smartscore.BuildConfig
 import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
@@ -47,7 +48,8 @@ class ContinuousSessionProcessor(
         val identityMethod: String,
         val uncertain: Boolean,
         val boundaryReason: String? = null,
-        val coverScore: Double = 0.0
+        val coverScore: Double = 0.0,
+        val debugDirectory: String? = null
     )
 
     private val worker: ExecutorService = Executors.newSingleThreadExecutor()
@@ -122,19 +124,34 @@ class ContinuousSessionProcessor(
         identityMethod = p.optString("identity_method", "LOADED"),
         uncertain = p.optBoolean("uncertain", true),
         boundaryReason = p.optString("boundary_reason").takeIf { it.isNotBlank() && it != "null" },
-        coverScore = p.optDouble("cover_score", 0.0)
+        coverScore = p.optDouble("cover_score", 0.0),
+        debugDirectory = p.optString("debug_directory").takeIf { it.isNotBlank() && it != "null" }
     )
 
     private fun processPage(index: Int, rawPath: String): PageResult {
         val bitmap = HighResImageLoader.load(rawPath)
-        val normalized = try { ImageProcessor.normalize(bitmap) } finally { bitmap.recycle() }
+        val debugDirectory = if (BuildConfig.DEBUG) {
+            File(root, "debug/page-${index.toString().padStart(4, '0')}").apply { mkdirs() }
+        } else null
+        val normalized = try {
+            if (debugDirectory != null) {
+                ImageProcessor.normalizeWithDiagnostics(
+                    bitmap,
+                    debugDirectory,
+                    rawPath,
+                    HighResImageLoader.rotationDegrees(rawPath)
+                )
+            } else {
+                ImageProcessor.normalize(bitmap)
+            }
+        } finally { bitmap.recycle() }
         val out = File(corrected, "page-${index.toString().padStart(4, '0')}.jpg")
         ImageProcessor.saveJpeg(normalized, out)
         val ocrText = runCatching { ScriptIdentityExtractor.extractText(context, out.absolutePath) }.getOrDefault("")
         val result = when (mode) {
-            MODE_SCRIPT -> classifyScript(index, rawPath, out.absolutePath, ocrText)
-            MODE_BROADSHEET -> classifyBroadsheet(index, rawPath, out.absolutePath, normalized, ocrText)
-            else -> PageResult(index, rawPath, out.absolutePath, ocrText, "DOCUMENT", null, null, null, null, null, null, "NONE", false)
+            MODE_SCRIPT -> classifyScript(index, rawPath, out.absolutePath, ocrText).copy(debugDirectory = debugDirectory?.absolutePath)
+            MODE_BROADSHEET -> classifyBroadsheet(index, rawPath, out.absolutePath, normalized, ocrText, debugDirectory)
+            else -> PageResult(index, rawPath, out.absolutePath, ocrText, "DOCUMENT", null, null, null, null, null, null, "NONE", false, debugDirectory = debugDirectory?.absolutePath)
         }
         normalized.recycle()
         return result
@@ -162,25 +179,28 @@ class ContinuousSessionProcessor(
         )
     }
 
-    private fun classifyBroadsheet(index: Int, rawPath: String, correctedPath: String, bitmap: Bitmap, text: String): PageResult {
+    private fun classifyBroadsheet(index: Int, rawPath: String, correctedPath: String, bitmap: Bitmap, text: String, debugDirectory: File?): PageResult {
         val qr = runCatching { SheetIdentityResolver.resolvePageIdentity(bitmap) }.getOrNull()
-        val ocrPage = Regex("(?i)(WTS-[A-Z0-9-]+)-(?:P|S)([0-9]+)").find(text)
+        val ocrPage = Regex("(?i)((?:WTS|SMB)-[A-Z0-9-]+)-(?:P|S)([0-9]+)").find(text)
         val repository = V2TemplateRepository(context)
-        val qrPageId = qr?.pageId?.uppercase()
-            ?: ocrPage?.value?.uppercase()?.replace(Regex("-S([0-9]+)$"), "-P$1")
-        val directTemplate = qrPageId?.let(repository::pageById)
+        val qrTemplate = qr?.let(repository::pageForIdentity)
+        val ocrPageId = ocrPage?.let { "${it.groupValues[1].uppercase()}-P${it.groupValues[2]}" }
+        val directTemplate = qrTemplate ?: ocrPageId?.let(repository::pageById)
         val headingManifest = repository.allManifests().firstOrNull { candidate ->
             text.contains(candidate.sheetId, true) ||
                 (text.contains(candidate.classLabel, true) && text.contains(candidate.subjectGroup.split(" • ").first(), true))
         }
-        val pageId = qrPageId ?: if (headingManifest?.pages?.size == 1) headingManifest.pages.first().pageId else null
-        val sheetId = qr?.sheetId?.uppercase()
+        val pageId = qrTemplate?.pageId ?: directTemplate?.pageId ?: if (headingManifest?.pages?.size == 1) headingManifest.pages.first().pageId else null
+        val ocrSheetId = ocrPage?.groupValues?.getOrNull(1)?.uppercase()
+        val sheetId = qrTemplate?.sheetId
+            ?: qr?.sheetId?.uppercase()
             ?: directTemplate?.sheetId
             ?: headingManifest?.sheetId
             ?: pageId?.replace(Regex("-P[0-9]+$"), "")
-            ?: Regex("(?i)WTS-[A-Z0-9-]+(?=-P[0-9]+)").find(text)?.value?.uppercase()
-        val template = pageId?.let(repository::pageById) ?: directTemplate
-        val pageNumber = qr?.pageNumber ?: template?.pageNumber ?: ocrPage?.groupValues?.getOrNull(1)?.toIntOrNull()
+            ?: ocrSheetId
+            ?: Regex("(?i)((?:WTS|SMB)-[A-Z0-9-]+)").find(text)?.value?.uppercase()
+        val template = qrTemplate ?: pageId?.let(repository::pageById) ?: directTemplate
+        val pageNumber = qr?.pageNumber ?: template?.pageNumber ?: ocrPage?.groupValues?.getOrNull(2)?.toIntOrNull()
         val layoutId = qr?.layoutId ?: template?.layoutId
         val subject = qr?.subjectGroup ?: template?.subjectGroup
         val looksLikeSheet = text.contains("BROADSHEET", true) || text.contains("SMARTSCORE", true) || qr != null || pageId != null || headingManifest != null
@@ -188,7 +208,8 @@ class ContinuousSessionProcessor(
         return PageResult(
             index, rawPath, correctedPath, text, "BROADSHEET", null, sheetId, pageId, layoutId,
             pageNumber, subject, qr?.method ?: if (pageId != null) "OCR_ID" else "UNRESOLVED", uncertain,
-            if (uncertain) "QR/template identity was not resolved" else null
+            if (uncertain) "QR/template identity was not resolved" else null,
+            debugDirectory = debugDirectory?.absolutePath
         )
     }
 
@@ -219,6 +240,7 @@ class ContinuousSessionProcessor(
                 put("document_page_number", p.pageNumber ?: JSONObject.NULL)
                 put("subject_group", p.subjectGroup ?: JSONObject.NULL)
                 put("identity_method", p.identityMethod)
+                put("debug_directory", p.debugDirectory ?: JSONObject.NULL)
                 p.identity?.let { put("identity", ScriptIdentityExtractor.toJson(it)) }
             })
         }
@@ -367,7 +389,10 @@ class ContinuousSessionProcessor(
             knownPages.forEach { (page, pageTemplate) ->
                 val bitmap = runCatching { HighResImageLoader.load(page.correctedPath) }.getOrNull() ?: return@forEach
                 val scanId = UUID.randomUUID().toString()
-                val readings = try { BroadsheetProcessor(context).process(bitmap, pageTemplate, scanId) } finally { bitmap.recycle() }
+                val debugDirectory = page.debugDirectory?.let(::File)?.takeIf { BuildConfig.DEBUG }
+                val readings = try {
+                    BroadsheetProcessor(context).process(bitmap, pageTemplate, scanId, debugDirectory, page.rawPath)
+                } finally { bitmap.recycle() }
                 readingCount += readings.size
                 exceptionCount += readings.count { it.state != "CONFIRMED" && it.state != "BLANK" }
                 runBlocking {
@@ -376,7 +401,7 @@ class ContinuousSessionProcessor(
                         pageTemplate.rowStart, pageTemplate.rowEnd, System.currentTimeMillis(), page.rawPath,
                         page.correctedPath, page.identityMethod, pageTemplate.layoutId, pageTemplate.subjectGroup, pageTemplate.templateVersion
                     ))
-                    dao.saveScan(ScanEntity(scanId, pageTemplate.pageId, "SMART_BROADSHEET", page.index, System.currentTimeMillis(), page.rawPath, page.correctedPath, "{\"layout_id\":\"${pageTemplate.layoutId}\"}"))
+                    dao.saveScan(ScanEntity(scanId, pageTemplate.pageId, "SMART_BROADSHEET", page.index, System.currentTimeMillis(), page.rawPath, page.correctedPath, "{\"layout_id\":\"${pageTemplate.layoutId}\",\"coordinate_origin\":\"${pageTemplate.coordinateOrigin}\"}"))
                     dao.saveReadings(readings)
                 }
             }
@@ -421,6 +446,7 @@ class ContinuousSessionProcessor(
         put("page_id", page.pageId ?: JSONObject.NULL)
         put("reason", page.boundaryReason ?: "Identity uncertain")
         put("corrected_path", page.correctedPath)
+        put("debug_directory", page.debugDirectory ?: JSONObject.NULL)
     }
 
     private fun ocrJson(id: String, pages: List<PageResult>): JSONObject = JSONObject().apply {
