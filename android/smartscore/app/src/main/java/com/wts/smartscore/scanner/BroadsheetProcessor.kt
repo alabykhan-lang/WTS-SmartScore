@@ -395,7 +395,12 @@ class BroadsheetProcessor(private val context: Context) {
             row.rois.forEach { roi ->
                 pixelRect(roi.x, roi.y, roi.w, roi.h, side, output)?.let { rect ->
                     canvas.drawRect(RectF(rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat()), roiPaint)
-                    canvas.drawText("${row.rowNo}/${roi.assessmentId}", rect.left.toFloat(), (rect.top - 2).coerceAtLeast(labelPaint.textSize), labelPaint)
+                    canvas.drawText(
+                        "${row.rowNo}/${roi.assessmentId}",
+                        rect.left.toFloat(),
+                        max(labelPaint.textSize, rect.top.toFloat() - 2f),
+                        labelPaint
+                    )
                 }
                 roi.digitBoxes.forEach { digit ->
                     pixelRect(digit.x, digit.y, digit.w, digit.h, side, output)?.let { rect ->
