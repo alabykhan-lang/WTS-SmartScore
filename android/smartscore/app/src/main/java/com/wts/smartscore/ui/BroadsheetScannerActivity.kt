@@ -83,26 +83,26 @@ class BroadsheetScannerActivity : AppCompatActivity() {
             setBackgroundColor(background)
         }
         root.addView(TextView(this).apply {
-            text = "SMART BROADSHEET"
+            this.text = "SMART BROADSHEET"
             textSize = 12f
             letterSpacing = 0.12f
             setTextColor(muted)
         })
         root.addView(TextView(this).apply {
-            text = "Scan a sheet"
+            this.text = "Scan a sheet"
             textSize = 28f
             setTextColor(text)
             setTypeface(typeface, Typeface.BOLD)
             setPadding(0, dp(5), 0, dp(3))
         })
         root.addView(TextView(this).apply {
-            text = "Google Scan cleans each page first. SmartScore saves it immediately, then reads and organises it in the background."
+            this.text = "Google Scan cleans each page first. SmartScore saves it immediately, then reads and organises it in the background."
             textSize = 14f
             setTextColor(muted)
             setPadding(0, 0, 0, dp(16))
         })
         identitySummary = TextView(this).apply {
-            text = "Identity will be detected when possible"
+            this.text = "Identity will be detected when possible"
             textSize = 15f
             setTextColor(text)
             setPadding(dp(16), dp(14), dp(16), dp(14))
@@ -110,7 +110,7 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         }
         root.addView(identitySummary, LinearLayout.LayoutParams(-1, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) })
         status = TextView(this).apply {
-            text = "Ready to scan"
+            this.text = "Ready to scan"
             textSize = 14f
             gravity = Gravity.CENTER
             setTextColor(muted)
@@ -118,19 +118,19 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         }
         root.addView(status)
         addPageButton = Button(this).apply {
-            text = "+  ADD PAGE"
+            this.text = "+  ADD PAGE"
             setOnClickListener { startScan() }
         }
         root.addView(addPageButton)
         pageList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(pageList)
         doneButton = Button(this).apply {
-            text = "DONE"
+            this.text = "DONE"
             setOnClickListener { finishToRecords() }
         }
         root.addView(doneButton, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(16) })
         root.addView(TextView(this).apply {
-            text = "Saved locally • processing continues after you leave this screen"
+            this.text = "Saved locally • processing continues after you leave this screen"
             textSize = 12f
             gravity = Gravity.CENTER
             setTextColor(muted)

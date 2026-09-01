@@ -80,31 +80,31 @@ class ScriptScannerActivity : AppCompatActivity() {
             setPadding(dp(18), dp(24), dp(18), dp(28))
             setBackgroundColor(background)
         }
-        root.addView(TextView(this).apply { text = "SCRIPT SCANNER"; textSize = 12f; letterSpacing = 0.12f; setTextColor(muted) })
+        root.addView(TextView(this).apply { this.text = "SCRIPT SCANNER"; textSize = 12f; letterSpacing = 0.12f; setTextColor(muted) })
         root.addView(TextView(this).apply {
-            text = "Scan a pile of scripts"
+            this.text = "Scan a pile of scripts"
             textSize = 28f
             setTextColor(text)
             setTypeface(typeface, Typeface.BOLD)
             setPadding(0, dp(5), 0, dp(3))
         })
         root.addView(TextView(this).apply {
-            text = "Capture cover pages and continuation pages together in Google's Quick Scan. SmartScore groups students afterwards."
+            this.text = "Capture cover pages and continuation pages together in Google's Quick Scan. SmartScore groups students afterwards."
             textSize = 14f
             setTextColor(muted)
             setPadding(0, 0, 0, dp(16))
         })
-        pageSummary = TextView(this).apply { text = "No pages saved yet"; textSize = 15f; setTextColor(text); setPadding(dp(16), dp(14), dp(16), dp(14)); setBackgroundColor(ContextCompat.getColor(this@ScriptScannerActivity, R.color.smartscore_surface)) }
+        pageSummary = TextView(this).apply { this.text = "No pages saved yet"; textSize = 15f; setTextColor(text); setPadding(dp(16), dp(14), dp(16), dp(14)); setBackgroundColor(ContextCompat.getColor(this@ScriptScannerActivity, R.color.smartscore_surface)) }
         root.addView(pageSummary, LinearLayout.LayoutParams(-1, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) })
-        status = TextView(this).apply { text = "Ready to scan"; textSize = 14f; gravity = Gravity.CENTER; setTextColor(muted); setPadding(0, dp(8), 0, dp(12)) }
+        status = TextView(this).apply { this.text = "Ready to scan"; textSize = 14f; gravity = Gravity.CENTER; setTextColor(muted); setPadding(0, dp(8), 0, dp(12)) }
         root.addView(status)
-        scanButton = Button(this).apply { text = "SCAN PAGES"; setOnClickListener { startScan() } }
+        scanButton = Button(this).apply { this.text = "SCAN PAGES"; setOnClickListener { startScan() } }
         root.addView(scanButton)
         pagesList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(pagesList)
-        doneButton = Button(this).apply { text = "DONE"; isEnabled = false; setOnClickListener { finishToRecords() } }
+        doneButton = Button(this).apply { this.text = "DONE"; isEnabled = false; setOnClickListener { finishToRecords() } }
         root.addView(doneButton, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(16) })
-        root.addView(TextView(this).apply { text = "Saved locally • identity review appears only for exceptions"; textSize = 12f; gravity = Gravity.CENTER; setTextColor(muted); setPadding(0, dp(12), 0, 0) })
+        root.addView(TextView(this).apply { this.text = "Saved locally • identity review appears only for exceptions"; textSize = 12f; gravity = Gravity.CENTER; setTextColor(muted); setPadding(0, dp(12), 0, 0) })
         setContentView(ScrollView(this).apply { addView(root) })
     }
 

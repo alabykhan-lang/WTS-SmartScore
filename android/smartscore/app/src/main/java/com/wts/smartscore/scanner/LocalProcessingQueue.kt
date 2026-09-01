@@ -66,7 +66,7 @@ class LocalProcessingWorker(appContext: Context, params: WorkerParameters) : Cor
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val runner = LocalTaskRunner(applicationContext)
         while (true) {
-            val task = dao.nextPendingTask() ?: return@withContext Result.success()
+            val task = dao.nextPendingTask() ?: break
             val now = System.currentTimeMillis()
             dao.saveTask(task.copy(status = "PROCESSING", attempts = task.attempts + 1, updatedAt = now))
             try {
@@ -77,6 +77,7 @@ class LocalProcessingWorker(appContext: Context, params: WorkerParameters) : Cor
                 runner.markFailed(task, error)
             }
         }
+        Result.success()
     }
 }
 
