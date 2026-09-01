@@ -154,6 +154,10 @@ private class LocalTaskRunner(private val context: Context) {
                 put("confidence", confidence)
                 put("heading_ocr", text.take(1200))
             }
+            val retainedPageState = when (side.pageState) {
+                "READY", "REVIEW_REQUIRED", "FAILED" -> side.pageState
+                else -> "SCANNED"
+            }
             dao.saveSide(side.copy(
                 sideNumber = template?.pageNumber ?: side.sideNumber,
                 totalSides = template?.let { repository.manifestFor(it.sheetId)?.expectedPageIds?.size ?: 0 } ?: side.totalSides,
@@ -163,7 +167,9 @@ private class LocalTaskRunner(private val context: Context) {
                 layoutId = template?.layoutId ?: side.layoutId,
                 subjectGroup = subject ?: side.subjectGroup,
                 templateVersion = template?.templateVersion ?: side.templateVersion,
-                pageState = if (template == null) "UNIDENTIFIED" else "PROCESSING",
+                // Identity is evidence for later mapping only. It never
+                // changes a saved page into an extraction blocker.
+                pageState = retainedPageState,
                 identityConfidence = confidence,
                 identityJson = identity.toString()
             ))
@@ -173,10 +179,10 @@ private class LocalTaskRunner(private val context: Context) {
                 subject = subject ?: sheet.subject,
                 templateVersion = template?.templateVersion ?: sheet.templateVersion,
                 expectedPageCount = template?.let { repository.manifestFor(it.sheetId)?.expectedPageIds?.size ?: 0 } ?: sheet.expectedPageCount,
-                reviewStatus = if (template == null) "UNIDENTIFIED" else "PROCESSING",
+                reviewStatus = if (template == null) sheet.reviewStatus else "PROCESSING",
                 layoutFamily = template?.layoutFamily ?: "GENERIC_SCORE_SHEET",
                 term = term,
-                documentType = if (template == null) "GENERIC_SCORE_SHEET" else "SMART_TEMPLATE",
+                documentType = if (template == null) "GENERIC_BROADSHEET" else "SMART_TEMPLATE",
                 identityConfidence = max(sheet.identityConfidence, confidence),
                 lastUpdatedAt = System.currentTimeMillis()
             ))
@@ -190,28 +196,18 @@ private class LocalTaskRunner(private val context: Context) {
         val side = dao.side(pageId) ?: return
         if (side.pageState == "FAILED") return
         val templatePageId = side.identityJson?.let { runCatching { JSONObject(it).optString("template_page_id") }.getOrDefault("") }.orEmpty()
-        dao.saveSide(side.copy(pageState = if (templatePageId.isBlank()) "UNIDENTIFIED" else "PROCESSING"))
+        dao.saveSide(side.copy(pageState = if (templatePageId.isBlank()) "SCANNED" else "PROCESSING"))
         updateBroadsheetAggregate(parentId)
     }
 
     private suspend fun readScores(parentId: String, payload: JSONObject?) {
         val pageId = payload?.optString("page_id").orEmpty()
-        var side = dao.side(pageId) ?: return
+        val side = dao.side(pageId) ?: return
         if (side.pageState == "FAILED") return
-        var identity = side.identityJson?.let { runCatching { JSONObject(it) }.getOrNull() }
+        dao.saveSide(side.copy(pageState = "PROCESSING"))
+        updateBroadsheetAggregate(parentId)
+        val identity = side.identityJson?.let { runCatching { JSONObject(it) }.getOrNull() }
         val templatePageId = identity?.optString("template_page_id").orEmpty()
-        var template = templatePageId.takeIf { it.isNotBlank() }?.let(repository::pageById)
-        if (template == null && side.pageState != "UNIDENTIFIED") {
-            identifyBroadsheet(parentId, payload)
-            side = dao.side(pageId) ?: return
-            identity = side.identityJson?.let { runCatching { JSONObject(it) }.getOrNull() }
-            template = identity?.optString("template_page_id")?.takeIf { it.isNotBlank() }?.let(repository::pageById)
-        }
-        if (template == null) {
-            dao.saveSide(side.copy(pageState = "UNIDENTIFIED"))
-            updateBroadsheetAggregate(parentId)
-            return
-        }
         val runtime = OpenCvRuntime.initialize(context)
         if (runtime.state != OpenCvRuntime.State.OPENCV_READY) error("Score processing is unavailable on this device")
         val path = side.normalizedPath ?: side.imagePath
@@ -219,12 +215,44 @@ private class LocalTaskRunner(private val context: Context) {
         try {
             val diagnostics = if (BuildConfig.DEBUG) File(context.filesDir, "broadsheets/diagnostics/$parentId/$pageId").apply { mkdirs() } else null
             val processor = BroadsheetProcessor(context)
-            val readings = processor.process(bitmap, template.copy(sheetId = parentId), pageId, diagnostics, side.imagePath)
-                .map { reading -> reading.copy(sheetId = parentId, sideId = pageId, scanId = pageId) }
+            // A known template is an extraction optimization, not an identity
+            // requirement. Shape matching lets the recovered physical V2 page
+            // use its exact geometry even when its QR/heading is absent.
+            val table = runCatching { GenericTableDetector.detect(bitmap) }.getOrNull()
+            var template = templatePageId.takeIf { it.isNotBlank() }?.let(repository::pageById)
+            if (template == null) template = repository.pageForExtractionShape(bitmap, side.sideNumber, table)
+            val output = if (template != null) {
+                processor.processDetailed(bitmap, template.copy(sheetId = parentId), pageId, diagnostics, side.imagePath)
+                    .let { result -> result.copy(readings = result.readings.map { it.copy(sheetId = parentId, sideId = pageId, scanId = pageId) }) }
+            } else {
+                processor.processGenericDetailed(bitmap, pageId, pageId, diagnostics, side.imagePath)
+                    .let { result -> result.copy(readings = result.readings.map { reading -> reading.copy(sheetId = parentId, sideId = pageId, scanId = pageId) }) }
+            }
+            val readings = output.readings
             dao.deleteReadingsForSide(pageId)
             dao.saveReadings(readings)
             val needsReview = readings.any { it.state in setOf("DOUBTFUL", "REVIEW_REQUIRED", "MISALIGNED", "INVALID", "UNREADABLE") }
-            dao.saveSide(side.copy(pageState = if (needsReview) "REVIEW_REQUIRED" else "READY"))
+            val extraction = JSONObject().apply {
+                put("path", if (template != null) "KNOWN_LAYOUT_SHAPE_OR_IDENTITY" else "GENERIC_GRID")
+                put("template_page_id", template?.pageId ?: JSONObject.NULL)
+                put("template_layout_id", template?.layoutId ?: JSONObject.NULL)
+                put("detected_cell_count", readings.size)
+                put("recognized_count", readings.count { it.rawValue != null || it.reviewedValue != null })
+                put("doubtful_count", readings.count { it.state in setOf("DOUBTFUL", "REVIEW_REQUIRED", "MISALIGNED", "INVALID", "UNREADABLE") })
+                put("diagnostic_file", output.diagnosticFile ?: JSONObject.NULL)
+                put("table", table?.toJson() ?: JSONObject.NULL)
+            }
+            val nextState = when {
+                readings.isEmpty() -> "FAILED"
+                needsReview -> "REVIEW_REQUIRED"
+                else -> "READY"
+            }
+            dao.saveSide(side.copy(
+                pageState = nextState,
+                layoutId = template?.layoutId ?: side.layoutId,
+                templateVersion = template?.templateVersion ?: side.templateVersion,
+                extractionJson = extraction.toString()
+            ))
             updateBroadsheetAggregate(parentId)
         } finally {
             bitmap.recycle()
@@ -240,7 +268,6 @@ private class LocalTaskRunner(private val context: Context) {
         val status = when {
             pages.any { it.pageState == "FAILED" } -> "FAILED"
             pages.any { it.pageState == "SCANNED" || it.pageState == "PROCESSING" } -> "PROCESSING"
-            pages.any { it.pageState == "UNIDENTIFIED" } -> "UNIDENTIFIED"
             reviewCount > 0 -> "REVIEW_REQUIRED"
             else -> "READY"
         }

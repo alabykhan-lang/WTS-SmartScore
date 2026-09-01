@@ -102,6 +102,24 @@ class V2TemplateRepository(@Suppress("UNUSED_PARAMETER") context: android.conten
     fun pages(): List<SheetPageTemplate> = currentManifest().pages
     fun sides(): List<SheetPageTemplate> = pages()
 
+    /**
+     * Best-effort extraction geometry for an unbranded page. This is not
+     * document identity: it is only a shape match used to get the recovered
+     * V2 physical sheet onto the score path when its QR/heading is absent.
+     */
+    fun pageForExtractionShape(bitmap: android.graphics.Bitmap, pageNumber: Int, table: GenericTableDetection?): SheetPageTemplate? {
+        val aspect = bitmap.width.toDouble() / bitmap.height.toDouble().coerceAtLeast(1.0)
+        if (aspect !in 1.20..1.65) return null
+        val rows = table?.rowCount ?: 0
+        val scoreColumns = table?.scoreColumns?.size ?: 0
+        return when {
+            rows in 14..17 && scoreColumns >= 4 -> currentManifest().pageByNumber(pageNumber.coerceIn(1, 2))
+            rows in 17..21 && scoreColumns in 3..4 -> manifestFor("SMB-TEST-0001")?.pages?.singleOrNull()
+            table == null -> currentManifest().pageByNumber(pageNumber.coerceIn(1, 2))
+            else -> null
+        }
+    }
+
     fun qrPayload(page: SheetPageTemplate): String {
         val manifest = manifestFor(page.sheetId)
         return "{" +

@@ -17,7 +17,7 @@ WTS SmartScore is a local-first Android productivity tool for high-volume docume
 
 Room stores the captured page and its workflow state before any OCR or score recognition is attempted. A durable WorkManager queue then runs document identification, template registration, score reading, script identity extraction, grouping and transcription. Queue tasks remain in Room so an app restart, phone lock, network failure or recognition failure cannot remove the source scan.
 
-Score cells are handled as known digit boxes rather than arbitrary page OCR. The primary recognizer is the documented `TfliteHandwrittenDigitRecognizer` contract when a verified `models/digit_classifier.tflite` asset is supplied; the current build keeps ML Kit as an explicit fallback because the repository does not yet contain a provenance-backed real-handwriting model. Score crops, predictions and corrections are stored under the local digit dataset for future evaluation.
+Score cells are handled as known digit boxes rather than arbitrary page OCR. When a known page is unavailable, OpenCV detects the printed table and creates generic row/column score cells. The primary recognizer is the bundled, provenance-documented TensorFlow Lite MNIST digit classifier; ML Kit is retained only as a per-digit fallback. Score crops, predictions and corrections are stored under the local digit dataset for future evaluation.
 
 The former CameraX/OpenCV Continuous Scan remains available only as an internal experimental/debug path. Normal user mode uses Google ML Kit for reliable Quick/Batch acquisition.
 

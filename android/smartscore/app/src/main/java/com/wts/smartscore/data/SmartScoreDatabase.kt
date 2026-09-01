@@ -4,7 +4,7 @@ import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities=[BroadsheetEntity::class,SheetSideEntity::class,ScanEntity::class,ScoreReadingEntity::class,CorrectionEntity::class,ScriptEntity::class,ScriptPageEntity::class,AiMarkEntity::class,ExportEntity::class,ProcessingTaskEntity::class],version=3,exportSchema=true)
+@Database(entities=[BroadsheetEntity::class,SheetSideEntity::class,ScanEntity::class,ScoreReadingEntity::class,CorrectionEntity::class,ScriptEntity::class,ScriptPageEntity::class,AiMarkEntity::class,ExportEntity::class,ProcessingTaskEntity::class],version=4,exportSchema=true)
 abstract class SmartScoreDatabase:RoomDatabase(){ abstract fun dao():SmartScoreDao
  companion object { @Volatile private var INSTANCE:SmartScoreDatabase?=null
   private val MIGRATION_1_2=object:Migration(1,2){override fun migrate(db:SupportSQLiteDatabase){
@@ -41,6 +41,9 @@ abstract class SmartScoreDatabase:RoomDatabase(){ abstract fun dao():SmartScoreD
    db.execSQL("CREATE INDEX IF NOT EXISTS index_processing_tasks_status_createdAt ON processing_tasks(status, createdAt)")
    db.execSQL("CREATE INDEX IF NOT EXISTS index_script_pages_sessionId ON script_pages(sessionId)")
   }}
-  fun get(context:Context)=INSTANCE?: synchronized(this){ INSTANCE?:Room.databaseBuilder(context.applicationContext,SmartScoreDatabase::class.java,"smartscore.db").addMigrations(MIGRATION_1_2,MIGRATION_2_3).build().also{INSTANCE=it} }
+  private val MIGRATION_3_4=object:Migration(3,4){override fun migrate(db:SupportSQLiteDatabase){
+   db.execSQL("ALTER TABLE sheet_sides ADD COLUMN extractionJson TEXT DEFAULT ''")
+  }}
+  fun get(context:Context)=INSTANCE?: synchronized(this){ INSTANCE?:Room.databaseBuilder(context.applicationContext,SmartScoreDatabase::class.java,"smartscore.db").addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4).build().also{INSTANCE=it} }
  }
 }

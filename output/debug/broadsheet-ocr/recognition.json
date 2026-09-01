@@ -1,0 +1,65 @@
+{
+  "schema_version": "2.0",
+  "source": "synthetic SMB-TEST-0001 fixture; structural and ground-truth assembly only",
+  "measured_on_android": false,
+  "detected_cell_count": 54,
+  "recognized_count": 27,
+  "doubtful_count": 0,
+  "artifacts": {
+    "page_corrected": "output/debug/broadsheet-ocr/page-corrected.jpg",
+    "table_overlay": "output/debug/broadsheet-ocr/table-overlay.jpg",
+    "cell_overlay": "output/debug/broadsheet-ocr/cell-overlay.jpg",
+    "crops": "output/debug/broadsheet-ocr/crops/"
+  },
+  "sample_reconstructed_scores": [
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "ca1",
+      "digit_boxes": [
+        0,
+        2
+      ],
+      "displayed_digits": "02",
+      "numeric_score": 2,
+      "maximum": 10,
+      "state": "CONFIRMED"
+    },
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "ca2",
+      "digit_boxes": [
+        0,
+        9
+      ],
+      "displayed_digits": "09",
+      "numeric_score": 9,
+      "maximum": 10,
+      "state": "CONFIRMED"
+    },
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "exam",
+      "digit_boxes": [
+        4,
+        2
+      ],
+      "displayed_digits": "42",
+      "numeric_score": 42,
+      "maximum": 70,
+      "state": "CONFIRMED"
+    },
+    {
+      "student": "BAKARE FATHIAT",
+      "assessment": "exam",
+      "digit_boxes": [
+        5,
+        1
+      ],
+      "displayed_digits": "51",
+      "numeric_score": 51,
+      "maximum": 70,
+      "state": "CONFIRMED"
+    }
+  ],
+  "android_measurement_required": "Run the physical filled V2 page and replace these fixture counts with device recognition.json."
+}

@@ -21,17 +21,34 @@ interface DigitRecognizer {
     fun close() = Unit
 }
 
-/** Current on-device implementation; deliberately kept behind DigitRecognizer. */
+/**
+ * On-device fallback for crops that the dedicated digit model cannot score.
+ * This is deliberately called on one digit crop at a time; it never receives
+ * the full broadsheet and is not used to discover the table.
+ */
 class MlKitDigitRecognizer(private val recognizer: TextRecognizer) : DigitRecognizer {
     override val engineName: String = "ML_KIT_TEXT_FALLBACK"
 
     override fun recognize(crop: Bitmap): DigitGuess {
         val raw = runCatching { Tasks.await(recognizer.process(InputImage.fromBitmap(crop, 0))).text }.getOrDefault("")
-        val normalized = raw.filter(Char::isDigit)
+        val normalized = raw.uppercase().mapNotNull { character ->
+            when {
+                character.isDigit() -> character
+                // Common single-glyph confusions are useful only after the
+                // crop has already been constrained to one digit.
+                character == 'O' || character == 'Q' -> '0'
+                character == 'I' || character == 'L' || character == '|' -> '1'
+                character == 'Z' -> '2'
+                character == 'S' -> '5'
+                character == 'G' -> '6'
+                character == 'B' -> '8'
+                else -> null
+            }
+        }.joinToString("")
         val value = normalized.singleOrNull()?.digitToIntOrNull()
         val confidence = when {
             value != null -> 0.80
-            normalized.isNotBlank() -> 0.45
+            normalized.length > 1 -> 0.35
             else -> 0.20
         }
         return DigitGuess(value, confidence, rawText = raw, normalizedText = normalized)

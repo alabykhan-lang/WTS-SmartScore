@@ -161,11 +161,10 @@ class RecordsActivity : AppCompatActivity() {
                     result += RecordItem(
                         key = "broadsheet:${sheet.sheetId}",
                         kind = Kind.BROADSHEET,
-                        title = sheet.classLabel.takeUnless { it.isBlank() || it.equals("Broadsheet", true) } ?: "Unidentified broadsheet",
-                        subtitle = listOf(sheet.subject, sheet.term.takeIf { it.isNotBlank() })
-                            .filterNotNull().filter { it.isNotBlank() && !it.equals("Identity pending", true) }.joinToString(" • ")
-                            .ifBlank { "Identity pending" },
-                        detail = "${pages.size} page${if (pages.size == 1) "" else "s"} • ${sheet.recognizedCount} score${if (sheet.recognizedCount == 1) "" else "s"} recognised${if (sheet.reviewCount > 0) " • ${sheet.reviewCount} need review" else ""}",
+                        title = sheet.classLabel.takeUnless { it.isBlank() || it.equals("Broadsheet", true) || it.equals("Identity pending", true) } ?: "Generic Broadsheet",
+                        subtitle = listOf(sheet.subject.takeIf { it.isNotBlank() && !it.equals("Identity pending", true) }, sheet.term.takeIf { it.isNotBlank() && !it.equals("FIRST", true) })
+                            .filterNotNull().joinToString(" • ").ifBlank { "Score extraction" },
+                        detail = "${pages.size} page${if (pages.size == 1) "" else "s"} • Scores extracted: ${sheet.recognizedCount}${if (sheet.reviewCount > 0) " • Needs review: ${sheet.reviewCount}" else ""}",
                         status = broadsheetStatus(sheet),
                         timestamp = sheet.createdAt,
                         id = sheet.sheetId
@@ -421,7 +420,7 @@ class RecordsActivity : AppCompatActivity() {
         "PROCESSING" -> "Processing"
         "READY" -> "Ready"
         "REVIEW_REQUIRED" -> "Needs review"
-        "UNIDENTIFIED" -> "Identity needs attention"
+        "UNIDENTIFIED" -> "Saved locally"
         "FAILED" -> "Processing failed"
         else -> "Saved locally"
     }

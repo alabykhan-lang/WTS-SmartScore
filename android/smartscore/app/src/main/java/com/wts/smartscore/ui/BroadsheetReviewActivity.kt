@@ -72,7 +72,7 @@ class BroadsheetReviewActivity : AppCompatActivity() {
             root.removeAllViews()
             root.addView(TextView(this@BroadsheetReviewActivity).apply { text = "BROADSHEET REVIEW"; textSize = 12f; letterSpacing = 0.12f; setTextColor(ContextCompat.getColor(this@BroadsheetReviewActivity, R.color.smartscore_text_muted)) })
             root.addView(TextView(this@BroadsheetReviewActivity).apply {
-                text = listOf(sheet.classLabel, sheet.subject).filter { it.isNotBlank() && it !in listOf("Broadsheet", "Identity pending") }.joinToString(" • ").ifBlank { "Unidentified broadsheet" }
+                text = listOf(sheet.classLabel, sheet.subject).filter { it.isNotBlank() && it !in listOf("Broadsheet", "Generic Broadsheet", "Identity pending") }.joinToString(" • ").ifBlank { "Generic Broadsheet" }
                 textSize = 27f
                 setTypeface(typeface, Typeface.BOLD)
                 setTextColor(ContextCompat.getColor(this@BroadsheetReviewActivity, R.color.smartscore_text))
@@ -124,7 +124,7 @@ class BroadsheetReviewActivity : AppCompatActivity() {
                 "PROCESSING" -> "Processing locally — you can leave this screen"
                 "READY" -> "Ready"
                 "REVIEW_REQUIRED" -> "Ready with a few scores to review"
-                "UNIDENTIFIED" -> "Identity needs attention — page retained"
+                "UNIDENTIFIED" -> "Saved locally — document identity is optional"
                 "FAILED" -> "Processing failed — page retained for another attempt"
                 else -> "Saved locally"
             }
@@ -134,16 +134,16 @@ class BroadsheetReviewActivity : AppCompatActivity() {
     }
 
     private fun addGrid(rows: List<ScoreReadingEntity>) {
-        val assessments = rows.map { it.assessmentId }.distinct()
+        val assessments = rows.map { it.assessmentId }.distinct().sortedWith(compareBy<String> { it.removePrefix("C").toIntOrNull() ?: Int.MAX_VALUE }.thenBy { it })
         val table = TableLayout(this).apply { isStretchAllColumns = false; setPadding(0, dp(12), 0, dp(12)) }
         val header = TableRow(this).apply { setBackgroundColor(ContextCompat.getColor(this@BroadsheetReviewActivity, R.color.smartscore_primary)) }
-        header.addView(cell("Student", 190, true, Color.WHITE))
+        header.addView(cell("Row", 110, true, Color.WHITE))
         assessments.forEach { header.addView(cell(label(it), 92, true, Color.WHITE)) }
         table.addView(header)
-        rows.groupBy { it.studentId }.forEach { (_, studentRows) ->
+        rows.groupBy { it.studentId }.toSortedMap(compareBy { key -> key.removePrefix("GENERIC-ROW-").toIntOrNull() ?: Int.MAX_VALUE }).forEach { (_, studentRows) ->
             val byAssessment = studentRows.associateBy { it.assessmentId }
             val row = TableRow(this)
-            row.addView(cell(studentRows.first().studentName, 190, false, ContextCompat.getColor(this, R.color.smartscore_text)))
+            row.addView(cell(studentRows.first().studentName.ifBlank { "Row ${studentRows.first().studentId}" }, 110, false, ContextCompat.getColor(this, R.color.smartscore_text)))
             assessments.forEach { assessment -> row.addView(scoreCell(byAssessment[assessment])) }
             table.addView(row)
         }
@@ -235,8 +235,6 @@ class BroadsheetReviewActivity : AppCompatActivity() {
             pages.forEach { page ->
                 dao.saveSide(page.copy(pageState = "SCANNED"))
                 val payload = org.json.JSONObject().put("page_id", page.sideId)
-                LocalProcessingQueue.enqueue(this@BroadsheetReviewActivity, ProcessingTaskTypes.IDENTIFY_DOCUMENT, sheetId, payload)
-                LocalProcessingQueue.enqueue(this@BroadsheetReviewActivity, ProcessingTaskTypes.REGISTER_TEMPLATE, sheetId, payload)
                 LocalProcessingQueue.enqueue(this@BroadsheetReviewActivity, ProcessingTaskTypes.READ_SCORES, sheetId, payload)
             }
             LocalProcessingQueue.schedule(this@BroadsheetReviewActivity)

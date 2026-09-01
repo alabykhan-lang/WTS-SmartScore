@@ -43,6 +43,7 @@ import androidx.room.*
     @ColumnInfo(defaultValue="'SCANNED'") val pageState:String="SCANNED",
     @ColumnInfo(defaultValue="0.0") val identityConfidence:Double=0.0,
     val identityJson:String?=null,
+    @ColumnInfo(defaultValue="''") val extractionJson:String?=null,
     @ColumnInfo(defaultValue="''") val sessionId:String?=null
 )
 @Entity(tableName="scans",indices=[Index("parentId")]) data class ScanEntity(@PrimaryKey val scanId:String,val parentId:String,val mode:String,val pageNumber:Int,val capturedAt:Long,val imagePath:String,val normalizedPath:String?,val qualityJson:String)

@@ -2,10 +2,12 @@
   "schema_version": "deterministic-test-1",
   "fixture": "SMB-TEST-0001",
   "source": "blank recovered physical-style PDF with synthetic labelled marks",
-  "note": "This validates geometry, ink/state separation, digit assembly and maximum checks; Android ML Kit handwriting accuracy is not measured here.",
+  "note": "This validates geometry, cell-crop naming, ink/state separation, digit assembly and maximum checks; Android model accuracy is not measured here.",
   "input_scan": "output/debug/broadsheet-ocr/01-input-scan.jpg",
-  "canonical_page": "output/debug/broadsheet-ocr/01-input-scan.jpg",
+  "canonical_page": "output/debug/broadsheet-ocr/page-corrected.jpg",
   "template_overlay": "output/debug/broadsheet-ocr/template-overlay-example.jpg",
+  "table_overlay": "output/debug/broadsheet-ocr/table-overlay.jpg",
+  "cell_overlay": "output/debug/broadsheet-ocr/cell-overlay.jpg",
   "geometry_checks": {
     "coordinate_origin": "TOP_LEFT",
     "row_1_y_mm": 53.45,
@@ -103,6 +105,10 @@
       "preprocessed": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA2-digit2-preprocessed.jpg"
     }
   ],
+  "all_cell_crops": {
+    "directory": "output/debug/broadsheet-ocr/crops",
+    "score_crop_count": 54
+  },
   "labelled_dataset": {
     "labels_csv": "output/debug/broadsheet-ocr/digit-dataset/labels.csv",
     "manifest": "output/debug/broadsheet-ocr/digit-dataset/manifest.json",
@@ -139,6 +145,13 @@
     "9:exam": "67"
   },
   "roi_count": 54,
+  "detected_cell_count": 54,
+  "recognition_counts": {
+    "fixture_non_blank_scores": 27,
+    "fixture_values_assembled": 27,
+    "fixture_doubtful_scores": 0,
+    "android_measured": false
+  },
   "diagnostic_fields": [
     "student",
     "assessment",

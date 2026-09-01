@@ -1,6 +1,6 @@
 {
   "test_scope": "geometry_ink_and_score_assembly",
-  "mlkit_accuracy_measured": false,
+  "digit_model_accuracy_measured": false,
   "labelled_digit_evaluation": {
     "total_labelled_digits": 54,
     "correct": null,
@@ -8,7 +8,7 @@
     "doubtful": null,
     "accuracy": null,
     "status": "NOT_RUN_ON_ANDROID_MODEL",
-    "reason": "No labelled physical handwriting corpus or verified TFLite model is embedded in this recovery build."
+    "reason": "The bundled TensorFlow MNIST model is verified by provenance, but Android inference on a physical teacher-handwriting corpus has not been run in this environment."
   },
   "cases": [
     {

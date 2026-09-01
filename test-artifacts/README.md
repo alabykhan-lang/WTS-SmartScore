@@ -11,12 +11,14 @@ All identities and roster rows in these files are invented test data.
 - `../output/xlsx/broadsheet-export-example.xlsx` — score grid plus flexible page-manifest sheet.
 - `script-grouping-test.json` — cover/continuation grouping scenario and expected review flag.
 - `export-example.json` — AI-ready script metadata example.
-- `../output/debug/broadsheet-ocr/template-overlay-example.jpg` — exact SMB-TEST-0001 score/digit ROI overlay.
+- `../output/debug/broadsheet-ocr/table-overlay.jpg` — exact SMB-TEST-0001 table/score-cell overlay.
+- `../output/debug/broadsheet-ocr/cell-overlay.jpg` — same cells annotated with reconstructed fixture values.
+- `../output/debug/broadsheet-ocr/crops/` — stable `row01-col01.jpg` score-cell crop names.
 - `../output/debug/broadsheet-ocr/roi/` — labelled source and preprocessed ROI samples, including blank, messy and border-touching marks.
 - `../output/debug/broadsheet-ocr/digit-samples/` — individual source and preprocessed digit-cell examples.
 - `../output/debug/broadsheet-ocr/digit-dataset/` — labelled crop images, CSV labels and dataset manifest.
-- `../output/debug/broadsheet-ocr/diagnostic.json` — geometry and diagnostic-field example.
-- `../output/debug/broadsheet-ocr/known-value-recognition-results.json` — deterministic digit assembly, blank-state, maximum-validation and labelled-evaluation status. Android handwriting accuracy is intentionally not claimed.
+- `../output/debug/broadsheet-ocr/diagnostic.json` and `recognition.json` — geometry, cell counts and diagnostic-field examples.
+- `../output/debug/broadsheet-ocr/known-value-recognition-results.json` — deterministic digit assembly, blank-state, maximum-validation and labelled-evaluation status. Android physical handwriting accuracy is intentionally not claimed.
 - `../output/debug/broadsheet-ocr/score-reconstruction-example.json` — readable score-value assembly examples such as `02 → 2`, `09 → 9` and `42 → 42`.
 - `digit-model/README.md` — documented TFLite model contract and provenance gate.
 

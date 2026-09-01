@@ -160,6 +160,26 @@ def write_sample_crops(image: Image.Image, rows: list[dict], values: dict[str, s
     return output
 
 
+def write_all_cell_crops(image: Image.Image, rows: list[dict]) -> dict[str, str]:
+    """Write the stable row/column crop names used by Android diagnostics."""
+    crop_dir = OUTPUT / "crops"
+    crop_dir.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for row_index, row in enumerate(rows):
+        for column_index, roi in enumerate(row["score_rois"]):
+            score = roi["score_roi_mm"]
+            left, top, right, bottom = px_rect(
+                {"x": score["x"], "y": score["y"], "width": score["width"], "height": score["height"]},
+                image.width,
+                image.height,
+            )
+            image.crop((left, top, right, bottom)).save(
+                crop_dir / f"row{row_index + 1:02d}-col{column_index + 1:02d}.jpg", quality=98
+            )
+            count += 1
+    return {"directory": str(crop_dir.relative_to(ROOT)), "score_crop_count": count}
+
+
 def write_labelled_dataset(image: Image.Image, rows: list[dict], values: dict[str, str]) -> dict:
     dataset_dir = OUTPUT / "digit-dataset"
     images_dir = dataset_dir / "images"
@@ -254,6 +274,23 @@ def write_overlay(image: Image.Image, rows: list[dict]) -> Path:
     return path
 
 
+def write_cell_overlay(image: Image.Image, rows: list[dict], values: dict[str, str]) -> Path:
+    overlay = image.copy()
+    draw = ImageDraw.Draw(overlay)
+    font = font_for(24)
+    for row_index, row in enumerate(rows):
+        for column_index, roi in enumerate(row["score_rois"]):
+            score = roi["score_roi_mm"]
+            box = {"x": score["x"], "y": score["y"], "width": score["width"], "height": score["height"]}
+            left, top, right, bottom = px_rect(box, image.width, image.height)
+            draw.rectangle((left, top, right, bottom), outline=(0, 150, 60), width=3)
+            value = values.get(f"{row_index + 1}:{roi['assessment_id']}", "?")
+            draw.text((left + 3, top + 2), value, fill=(0, 100, 40), font=font)
+    path = OUTPUT / "cell-overlay.jpg"
+    overlay.save(path, quality=96)
+    return path
+
+
 def assembly(value_digits: Iterable[int | None], maximum: int, ink: Iterable[bool]) -> dict:
     digits = list(value_digits)
     ink_flags = list(ink)
@@ -293,9 +330,12 @@ def main() -> None:
     input_path = OUTPUT / "01-input-scan.jpg"
     image.save(input_path, quality=98)
     overlay_path = write_overlay(image, rows)
+    shutil.copyfile(overlay_path, OUTPUT / "table-overlay.jpg")
+    cell_overlay_path = write_cell_overlay(image, rows, values)
     image.save(OUTPUT / "02-canonical-page.jpg", quality=98)
     shutil.copyfile(overlay_path, OUTPUT / "03-template-overlay.jpg")
     samples = write_sample_crops(image, rows, values)
+    all_crops = write_all_cell_crops(image, rows)
     dataset = write_labelled_dataset(image, rows, values)
 
     geometry_checks = {
@@ -309,22 +349,33 @@ def main() -> None:
         "schema_version": "deterministic-test-1",
         "fixture": "SMB-TEST-0001",
         "source": "blank recovered physical-style PDF with synthetic labelled marks",
-        "note": "This validates geometry, ink/state separation, digit assembly and maximum checks; Android ML Kit handwriting accuracy is not measured here.",
+        "note": "This validates geometry, cell-crop naming, ink/state separation, digit assembly and maximum checks; Android model accuracy is not measured here.",
         "input_scan": str(input_path.relative_to(ROOT)),
-        "canonical_page": str(input_path.relative_to(ROOT)),
+        "canonical_page": str((OUTPUT / "page-corrected.jpg").relative_to(ROOT)),
         "template_overlay": str(overlay_path.relative_to(ROOT)),
+        "table_overlay": str((OUTPUT / "table-overlay.jpg").relative_to(ROOT)),
+        "cell_overlay": str(cell_overlay_path.relative_to(ROOT)),
         "geometry_checks": geometry_checks,
         "sample_crops": samples,
+        "all_cell_crops": all_crops,
         "labelled_dataset": dataset,
         "synthetic_values": values,
         "roi_count": sum(len(row["score_rois"]) for row in rows),
+        "detected_cell_count": sum(len(row["score_rois"]) for row in rows),
+        "recognition_counts": {
+            "fixture_non_blank_scores": len(values),
+            "fixture_values_assembled": len(values),
+            "fixture_doubtful_scores": 0,
+            "android_measured": False,
+        },
         "diagnostic_fields": ["student", "assessment", "expected_roi_coordinates", "raw_ocr_text", "normalized_ocr_text", "blank_score", "ink_ratio", "recognition_state", "final_value", "validation_result"],
     }
     (OUTPUT / "diagnostic.json").write_text(json.dumps(diagnostic, indent=2) + "\n")
+    (OUTPUT / "page-corrected.jpg").write_bytes(input_path.read_bytes())
     results = known_value_tests()
     report = {
         "test_scope": "geometry_ink_and_score_assembly",
-        "mlkit_accuracy_measured": False,
+        "digit_model_accuracy_measured": False,
         "labelled_digit_evaluation": {
             "total_labelled_digits": dataset["labelled_digit_cells"],
             "correct": None,
@@ -332,7 +383,7 @@ def main() -> None:
             "doubtful": None,
             "accuracy": None,
             "status": "NOT_RUN_ON_ANDROID_MODEL",
-            "reason": "No labelled physical handwriting corpus or verified TFLite model is embedded in this recovery build.",
+            "reason": "The bundled TensorFlow MNIST model is verified by provenance, but Android inference on a physical teacher-handwriting corpus has not been run in this environment.",
         },
         "cases": results,
         "all_structural_cases_passed": all(item["passed"] for item in results),
@@ -345,6 +396,23 @@ def main() -> None:
         {"student": "BAKARE FATHIAT", "assessment": "exam", "digit_boxes": [5, 1], "displayed_digits": "51", "numeric_score": 51, "maximum": 70, "state": "CONFIRMED"},
     ]
     (OUTPUT / "score-reconstruction-example.json").write_text(json.dumps({"source": "labelled fixture assembly", "examples": score_examples}, indent=2) + "\n")
+    recognition = {
+        "schema_version": "2.0",
+        "source": "synthetic SMB-TEST-0001 fixture; structural and ground-truth assembly only",
+        "measured_on_android": False,
+        "detected_cell_count": len(rows) * len(rows[0]["score_rois"]),
+        "recognized_count": len(values),
+        "doubtful_count": 0,
+        "artifacts": {
+            "page_corrected": "output/debug/broadsheet-ocr/page-corrected.jpg",
+            "table_overlay": "output/debug/broadsheet-ocr/table-overlay.jpg",
+            "cell_overlay": "output/debug/broadsheet-ocr/cell-overlay.jpg",
+            "crops": "output/debug/broadsheet-ocr/crops/",
+        },
+        "sample_reconstructed_scores": score_examples,
+        "android_measurement_required": "Run the physical filled V2 page and replace these fixture counts with device recognition.json.",
+    }
+    (OUTPUT / "recognition.json").write_text(json.dumps(recognition, indent=2) + "\n")
     print(json.dumps({"output": str(OUTPUT), "structural_cases": len(results), "all_passed": report["all_structural_cases_passed"]}, indent=2))
 
 

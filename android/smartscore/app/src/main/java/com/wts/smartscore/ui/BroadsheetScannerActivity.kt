@@ -44,6 +44,7 @@ class BroadsheetScannerActivity : AppCompatActivity() {
     private lateinit var identitySummary: TextView
     private lateinit var pageList: LinearLayout
     private lateinit var addPageButton: Button
+    private lateinit var viewScoresButton: Button
     private lateinit var doneButton: Button
 
     private val launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
@@ -102,7 +103,7 @@ class BroadsheetScannerActivity : AppCompatActivity() {
             setPadding(0, 0, 0, dp(16))
         })
         identitySummary = TextView(this).apply {
-            this.text = "Identity will be detected when possible"
+            this.text = "Scores are read from the saved page. Subject and class can be added later."
             textSize = 15f
             setTextColor(text)
             setPadding(dp(16), dp(14), dp(16), dp(14))
@@ -124,6 +125,11 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         root.addView(addPageButton)
         pageList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(pageList)
+        viewScoresButton = Button(this).apply {
+            this.text = "VIEW SCORES"
+            setOnClickListener { openScores() }
+        }
+        root.addView(viewScoresButton)
         doneButton = Button(this).apply {
             this.text = "DONE"
             setOnClickListener { finishToRecords() }
@@ -187,21 +193,22 @@ class BroadsheetScannerActivity : AppCompatActivity() {
                         dao.saveSide(side)
                         dao.saveScan(ScanEntity("$pageId-scan", sessionId, "SMART_BROADSHEET", next, now, page.imagePath, page.imagePath, "{\"source\":\"GOOGLE_ML_KIT_DOCUMENT_SCANNER\"}"))
                         val payload = JSONObject().put("page_id", pageId)
-                        LocalProcessingQueue.enqueue(this@BroadsheetScannerActivity, ProcessingTaskTypes.IDENTIFY_DOCUMENT, sessionId, payload)
-                        LocalProcessingQueue.enqueue(this@BroadsheetScannerActivity, ProcessingTaskTypes.REGISTER_TEMPLATE, sessionId, payload)
+                        // Capture is complete once the corrected page is in
+                        // Room. Score extraction is the only automatic
+                        // broadsheet task in this pass; identity is optional.
                         LocalProcessingQueue.enqueue(this@BroadsheetScannerActivity, ProcessingTaskTypes.READ_SCORES, sessionId, payload)
                         next++
                     }
                     val sheet = dao.broadsheet(sessionId) ?: BroadsheetEntity(
                         sheetId = sessionId,
-                        classLabel = "Broadsheet",
-                        subject = "Identity pending",
+                        classLabel = "Generic Broadsheet",
+                        subject = "",
                         templateVersion = "",
                         expectedPageCount = 0,
                         reviewStatus = "SCANNED",
                         createdAt = now,
                         layoutFamily = "GENERIC_SCORE_SHEET",
-                        documentType = "GENERIC_SCORE_SHEET",
+                        documentType = "GENERIC_BROADSHEET",
                         pageCount = dao.pages(sessionId).size,
                         lastUpdatedAt = now
                     )
@@ -224,11 +231,18 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val sheet = withContext(Dispatchers.IO) { dao.broadsheet(sessionId) }
             val pages = withContext(Dispatchers.IO) { dao.pages(sessionId) }
-            val title = listOf(sheet?.classLabel, sheet?.subject).orEmpty().filter { !it.isNullOrBlank() && it !in listOf("Broadsheet", "Identity pending") }.joinToString(" • ")
-            identitySummary.text = if (title.isBlank()) "Identity will be detected when possible" else title
+            val readings = withContext(Dispatchers.IO) { dao.readings(sessionId) }
+            val recognized = readings.count { it.rawValue != null || it.reviewedValue != null }
+            val review = readings.count { it.state in setOf("DOUBTFUL", "REVIEW_REQUIRED", "MISALIGNED", "INVALID", "UNREADABLE") }
+            identitySummary.text = if (pages.isEmpty()) {
+                "Scores are read from the saved page. Subject and class can be added later."
+            } else {
+                "${readings.size} score regions detected  •  $recognized extracted  •  $review need review"
+            }
             pageList.removeAllViews()
             pages.forEach { page -> pageList.addView(pageCard(page)) }
             doneButton.isEnabled = pages.isNotEmpty()
+            viewScoresButton.isEnabled = pages.isNotEmpty()
             status.text = if (pages.isEmpty()) "Ready to scan" else "${pages.size} page${if (pages.size == 1) "" else "s"} saved locally"
         }
     }
@@ -250,7 +264,15 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
         labels.addView(TextView(this).apply { text = "Page ${page.sideNumber}"; textSize = 17f; setTypeface(typeface, Typeface.BOLD); setTextColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_text)) })
         labels.addView(TextView(this).apply { text = pageStateLabel(page.pageState); textSize = 14f; setTextColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_text_muted)); setPadding(0, dp(5), 0, 0) })
-        labels.addView(TextView(this).apply { text = "Saved locally"; textSize = 12f; setTextColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_text_muted)); setPadding(0, dp(8), 0, 0) })
+        lifecycleScope.launch {
+            val readings = withContext(Dispatchers.IO) { dao.readingsForSide(page.sideId) }
+            labels.addView(TextView(this@BroadsheetScannerActivity).apply {
+                text = "${readings.size} score regions  •  ${readings.count { it.rawValue != null || it.reviewedValue != null }} extracted"
+                textSize = 12f
+                setTextColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_text_muted))
+                setPadding(0, dp(8), 0, 0)
+            })
+        }
         row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
         card.addView(row)
         return card
@@ -261,7 +283,7 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         "PROCESSING" -> "Processing"
         "READY" -> "Ready"
         "REVIEW_REQUIRED" -> "Needs review"
-        "UNIDENTIFIED" -> "Identity uncertain"
+        "UNIDENTIFIED" -> "Saved locally"
         "FAILED" -> "Processing failed"
         else -> "Saved"
     }
@@ -270,6 +292,11 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         LocalProcessingQueue.schedule(this)
         startActivity(Intent(this, RecordsActivity::class.java))
         finish()
+    }
+
+    private fun openScores() {
+        if (sessionId.isBlank()) return
+        startActivity(Intent(this, BroadsheetReviewActivity::class.java).putExtra("sheetId", sessionId))
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

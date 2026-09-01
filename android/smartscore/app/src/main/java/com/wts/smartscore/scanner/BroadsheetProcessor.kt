@@ -71,7 +71,7 @@ class BroadsheetProcessor(private val context: Context) {
         qrBounds: RectF? = null
     ): ProcessOutput {
         diagnosticDir?.mkdirs()
-        val roiDir = (diagnosticDir?.let { File(it, "roi") }
+        val roiDir = (diagnosticDir?.let { File(it, "crops") }
             ?: File(context.filesDir, "broadsheet-crops")).apply { mkdirs() }
         val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
         val digitRecognizer = DigitRecognizerFactory.create(context, textRecognizer)
@@ -81,14 +81,16 @@ class BroadsheetProcessor(private val context: Context) {
             if (diagnosticDir != null) {
                 saveInputArtifact(bitmap, inputPath, File(diagnosticDir, "01-input-scan.jpg"))
                 ImageProcessor.saveJpeg(bitmap, File(diagnosticDir, "02-canonical-page.jpg"), 98)
+                ImageProcessor.saveJpeg(bitmap, File(diagnosticDir, "page-corrected.jpg"), 98)
                 val overlay = renderTemplateOverlay(bitmap, side, registration)
                 ImageProcessor.saveJpeg(overlay, File(diagnosticDir, "03-template-overlay.jpg"), 98)
                 ImageProcessor.saveJpeg(overlay, File(diagnosticDir, "template-overlay.jpg"), 98)
+                ImageProcessor.saveJpeg(overlay, File(diagnosticDir, "table-overlay.jpg"), 98)
                 overlay.recycle()
             }
 
             val readings = side.rows.flatMap { row ->
-                row.rois.map { roi ->
+                row.rois.mapIndexed { roiIndex, roi ->
                     val prefix = "student-${row.rowNo.toString().padStart(3, '0')}-${safePart(roi.assessmentId)}"
                     val scoreRect = pixelRect(roi.x, roi.y, roi.w, roi.h, side, bitmap, registration)
                     val scoreCrop = scoreRect?.let { Bitmap.createBitmap(bitmap, it.left, it.top, it.width, it.height) }
@@ -96,6 +98,12 @@ class BroadsheetProcessor(private val context: Context) {
                     val scoreSourcePath = scoreCrop?.let { crop ->
                         val file = File(roiDir, "$prefix-source.jpg")
                         ImageProcessor.saveJpeg(crop, file)
+                        // Stable row/column names make the diagnostic folder
+                        // useful without knowing the internal template IDs.
+                        ImageProcessor.saveJpeg(
+                            crop,
+                            File(roiDir, "row${row.rowNo.toString().padStart(2, '0')}-col${(roiIndex + 1).toString().padStart(2, '0')}.jpg")
+                        )
                         file.absolutePath
                     }
                     val scorePreprocessedPath = scorePrepared?.let { prepared ->
@@ -143,8 +151,11 @@ class BroadsheetProcessor(private val context: Context) {
             }
 
             val diagnosticFile = diagnosticDir?.let { directory ->
+                val cellOverlay = renderTemplateCellOverlay(bitmap, side, registration, readings)
+                ImageProcessor.saveJpeg(cellOverlay, File(directory, "cell-overlay.jpg"), 98)
+                cellOverlay.recycle()
                 val output = JSONObject().apply {
-                    put("schema_version", "1.0")
+                    put("schema_version", "2.0")
                     put("sheet_id", side.sheetId)
                     put("page_id", side.pageId)
                     put("layout_id", side.layoutId)
@@ -158,9 +169,13 @@ class BroadsheetProcessor(private val context: Context) {
                     put("registration", registration.toJson())
                     put("recognizer_engine", digitRecognizer.engineName)
                     put("roi_count", diagnostics.length())
+                    put("detected_cell_count", diagnostics.length())
+                    put("recognized_count", readings.count { it.rawValue != null || it.reviewedValue != null })
+                    put("doubtful_count", readings.count { it.state in setOf("DOUBTFUL", "REVIEW_REQUIRED", "MISALIGNED", "INVALID", "UNREADABLE") })
                     put("rois", diagnostics)
                 }
-                File(directory, "diagnostic.json").also { it.writeText(output.toString(2)) }.absolutePath
+                File(directory, "diagnostic.json").writeText(output.toString(2))
+                File(directory, "recognition.json").also { it.writeText(output.toString(2)) }.absolutePath
             }
             return ProcessOutput(readings, diagnosticFile)
         } finally {
@@ -169,12 +184,169 @@ class BroadsheetProcessor(private val context: Context) {
         }
     }
 
+    /**
+     * Extracts a generic record sheet without requiring a QR, roster or
+     * template identity. The detector supplies the table geometry and the
+     * same per-digit recognizer used by known templates reads each cell.
+     */
+    fun processGenericDetailed(
+        bitmap: Bitmap,
+        scanId: String,
+        pageId: String,
+        diagnosticDir: File?,
+        inputPath: String? = null
+    ): ProcessOutput {
+        diagnosticDir?.mkdirs()
+        val cropDir = (diagnosticDir?.let { File(it, "crops") }
+            ?: File(context.filesDir, "broadsheet-crops")).apply { mkdirs() }
+        val detection = GenericTableDetector.detect(bitmap)
+        if (detection == null) {
+            val diagnostic = diagnosticDir?.let { directory ->
+                saveInputArtifact(bitmap, inputPath, File(directory, "page-corrected.jpg"))
+                val output = JSONObject().apply {
+                    put("schema_version", "2.0")
+                    put("page_id", pageId)
+                    put("path", "GENERIC_TABLE_NOT_DETECTED")
+                    put("detected_cell_count", 0)
+                    put("recognized_count", 0)
+                    put("doubtful_count", 0)
+                    put("cells", JSONArray())
+                }
+                File(directory, "diagnostic.json").writeText(output.toString(2))
+                File(directory, "recognition.json").also { it.writeText(output.toString(2)) }.absolutePath
+            }
+            return ProcessOutput(emptyList(), diagnostic)
+        }
+
+        val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val digitRecognizer = DigitRecognizerFactory.create(context, textRecognizer)
+        val diagnostics = JSONArray()
+        try {
+            if (diagnosticDir != null) {
+                saveInputArtifact(bitmap, inputPath, File(diagnosticDir, "01-input-scan.jpg"))
+                saveInputArtifact(bitmap, inputPath, File(diagnosticDir, "page-corrected.jpg"))
+                ImageProcessor.saveJpeg(bitmap, File(diagnosticDir, "02-canonical-page.jpg"), 98)
+                val tableOverlay = renderGenericTableOverlay(bitmap, detection)
+                ImageProcessor.saveJpeg(tableOverlay, File(diagnosticDir, "table-overlay.jpg"), 98)
+                tableOverlay.recycle()
+            }
+
+            val readings = detection.cells.map { cell ->
+                val stem = "row${(cell.rowIndex + 1).toString().padStart(2, '0')}-col${(cell.columnIndex + 1).toString().padStart(2, '0')}"
+                val sourceCrop = Bitmap.createBitmap(bitmap, cell.rect.left, cell.rect.top, cell.rect.width(), cell.rect.height())
+                val sourcePath = File(cropDir, "$stem.jpg").also { ImageProcessor.saveJpeg(sourceCrop, it, 98) }
+                val scorePrepared = prepareCrop(sourceCrop)
+                val preprocessedPath = File(cropDir, "$stem-preprocessed.jpg").also { ImageProcessor.saveJpeg(scorePrepared.bitmap, it, 98) }
+                val observations = recognizeGenericDigits(sourceCrop, digitRecognizer, cropDir, stem)
+                val roiInkPresent = !scorePrepared.blank
+                val assembly = BroadsheetScoreAssembler.assemble(observations, 100.0, roiInkPresent)
+                val reading = ScoreReadingEntity(
+                    id = UUID.randomUUID().toString(),
+                    sheetId = pageId,
+                    sideId = pageId,
+                    scanId = scanId,
+                    studentId = "GENERIC-ROW-${(cell.rowIndex + 1).toString().padStart(3, '0')}",
+                    studentName = "Row ${cell.rowIndex + 1}",
+                    assessmentId = "C${cell.columnIndex + 1}",
+                    maximum = 100.0,
+                    rawValue = assembly.value,
+                    reviewedValue = assembly.value,
+                    confidence = min(cell.confidence, assembly.confidence),
+                    state = assembly.state,
+                    cropPath = sourcePath.absolutePath,
+                    reviewedAt = null,
+                    recognizedText = displayText(observations, assembly),
+                    digitDetailsJson = digitDetails(observations)
+                )
+                diagnostics.put(genericCellDiagnostic(cell, sourcePath.absolutePath, preprocessedPath.absolutePath, scorePrepared, observations, assembly))
+                scorePrepared.bitmap.recycle()
+                sourceCrop.recycle()
+                reading
+            }
+
+            if (diagnosticDir != null) {
+                val cellOverlay = renderGenericCellOverlay(bitmap, detection, readings)
+                ImageProcessor.saveJpeg(cellOverlay, File(diagnosticDir, "cell-overlay.jpg"), 98)
+                cellOverlay.recycle()
+            }
+            val output = JSONObject().apply {
+                put("schema_version", "2.0")
+                put("page_id", pageId)
+                put("path", "GENERIC_GRID")
+                put("recognizer_engine", digitRecognizer.engineName)
+                put("table", detection.toJson())
+                put("detected_cell_count", detection.cells.size)
+                put("recognized_count", readings.count { it.rawValue != null || it.reviewedValue != null })
+                put("doubtful_count", readings.count { it.state in setOf("DOUBTFUL", "REVIEW_REQUIRED", "MISALIGNED", "INVALID", "UNREADABLE") })
+                put("cells", diagnostics)
+            }
+            val diagnosticFile = diagnosticDir?.let { directory ->
+                File(directory, "diagnostic.json").writeText(output.toString(2))
+                File(directory, "recognition.json").also { it.writeText(output.toString(2)) }.absolutePath
+            }
+            return ProcessOutput(readings, diagnosticFile)
+        } finally {
+            digitRecognizer.close()
+            textRecognizer.close()
+        }
+    }
+
+    private fun recognizeGenericDigits(
+        sourceCrop: Bitmap,
+        recognizer: DigitRecognizer,
+        outputDir: File,
+        stem: String
+    ): List<DigitObservation> {
+        val halfWidth = (sourceCrop.width / 2).coerceAtLeast(1)
+        val parts = listOf(
+            Bitmap.createBitmap(sourceCrop, 0, 0, halfWidth, sourceCrop.height),
+            Bitmap.createBitmap(sourceCrop, halfWidth, 0, sourceCrop.width - halfWidth, sourceCrop.height)
+        )
+        data class Part(val source: Bitmap, val prepared: PreparedCrop)
+        val prepared = parts.map { Part(it, prepareCrop(it)) }
+        val inkParts = prepared.filter { !it.prepared.blank }
+        val selected = when {
+            inkParts.isEmpty() -> prepared
+            inkParts.size == 1 -> inkParts
+            else -> prepared
+        }
+        return selected.mapIndexed { index, part ->
+            val sourceFile = File(outputDir, "$stem-digit-${index + 1}-source.jpg")
+            val preprocessedFile = File(outputDir, "$stem-digit-${index + 1}-preprocessed.jpg")
+            ImageProcessor.saveJpeg(part.source, sourceFile, 98)
+            ImageProcessor.saveJpeg(part.prepared.bitmap, preprocessedFile, 98)
+            val guess = if (part.prepared.blank) {
+                DigitGuess(value = null, confidence = 1.0, blank = true)
+            } else {
+                recognizer.recognize(part.prepared.bitmap)
+            }
+            val observation = DigitObservation(
+                index = index,
+                value = guess.value,
+                confidence = guess.confidence,
+                blank = part.prepared.blank,
+                sourcePath = sourceFile.absolutePath,
+                preprocessedPath = preprocessedFile.absolutePath,
+                inkPixels = part.prepared.inkPixels,
+                inkRatio = part.prepared.inkRatio,
+                connectedComponents = part.prepared.connectedComponents,
+                contrast = part.prepared.contrast,
+                rawOcrText = guess.rawText,
+                normalizedOcrText = guess.normalizedText,
+                recognizerEngine = recognizer.engineName
+            )
+            part.prepared.bitmap.recycle()
+            part.source.recycle()
+            observation
+        }
+    }
+
     private fun displayText(observations: List<DigitObservation>, assembly: ScoreAssembly): String {
         if (assembly.state == "BLANK") return "—"
         return observations.sortedBy { it.index }.joinToString("") { observation ->
             when {
                 observation.blank -> "?"
-                observation.value != null -> observation.value.toString()
+                observation.value != null && observation.confidence >= 0.72 -> observation.value.toString()
                 else -> "?"
             }
         }.ifBlank { "?" }
@@ -460,6 +632,149 @@ class BroadsheetProcessor(private val context: Context) {
             }
         }
         return output
+    }
+
+    private fun renderTemplateCellOverlay(
+        bitmap: Bitmap,
+        side: SheetPageTemplate,
+        registration: TemplateRegistration,
+        readings: List<ScoreReadingEntity>
+    ): Bitmap {
+        val output = renderTemplateOverlay(bitmap, side, registration)
+        val canvas = Canvas(output)
+        val valuePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = Color.rgb(0, 100, 40)
+            textSize = max(11f, min(output.width, output.height) / 105f)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        val byKey = readings.associateBy { "${it.studentId}|${it.assessmentId}" }
+        side.rows.forEach { row ->
+            row.rois.forEach { roi ->
+                val reading = byKey["${row.studentId}|${roi.assessmentId}"] ?: return@forEach
+                pixelRect(roi.x, roi.y, roi.w, roi.h, side, output, registration)?.let { rect ->
+                    canvas.drawText(
+                        displayTextFromReading(reading),
+                        rect.left.toFloat(),
+                        (rect.top + valuePaint.textSize + 2f).coerceAtMost(output.height - 2f),
+                        valuePaint
+                    )
+                }
+            }
+        }
+        return output
+    }
+
+    private fun renderGenericTableOverlay(bitmap: Bitmap, detection: GenericTableDetection): Bitmap {
+        val output = bitmap.copy(Bitmap.Config.ARGB_8888, true)
+        val canvas = Canvas(output)
+        val tablePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = max(3f, min(output.width, output.height) / 500f)
+            color = Color.rgb(0, 120, 255)
+        }
+        val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = max(1.5f, min(output.width, output.height) / 1000f)
+            color = Color.rgb(0, 190, 120)
+        }
+        val cellPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = max(1.5f, min(output.width, output.height) / 850f)
+            color = Color.rgb(240, 40, 140)
+        }
+        val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = Color.rgb(0, 80, 160)
+            textSize = max(10f, min(output.width, output.height) / 125f)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        canvas.drawRect(
+            detection.tableRect.left.toFloat(),
+            detection.tableRect.top.toFloat(),
+            detection.tableRect.right.toFloat(),
+            detection.tableRect.bottom.toFloat(),
+            tablePaint
+        )
+        detection.rowLines.forEach { y -> canvas.drawLine(0f, y.toFloat(), output.width.toFloat(), y.toFloat(), linePaint) }
+        detection.columnLines.forEach { x -> canvas.drawLine(x.toFloat(), detection.tableRect.top.toFloat(), x.toFloat(), detection.tableRect.bottom.toFloat(), linePaint) }
+        detection.cells.forEach { cell ->
+            canvas.drawRect(
+                cell.rect.left.toFloat(),
+                cell.rect.top.toFloat(),
+                cell.rect.right.toFloat(),
+                cell.rect.bottom.toFloat(),
+                cellPaint
+            )
+            canvas.drawText("R${cell.rowIndex + 1} C${cell.columnIndex + 1}", cell.rect.left.toFloat(), (cell.rect.top - 2f).coerceAtLeast(labelPaint.textSize), labelPaint)
+        }
+        return output
+    }
+
+    private fun renderGenericCellOverlay(
+        bitmap: Bitmap,
+        detection: GenericTableDetection,
+        readings: List<ScoreReadingEntity>
+    ): Bitmap {
+        val output = renderGenericTableOverlay(bitmap, detection)
+        val canvas = Canvas(output)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = Color.rgb(0, 100, 40)
+            textSize = max(12f, min(output.width, output.height) / 100f)
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        readings.zip(detection.cells).forEach { (reading, cell) ->
+            canvas.drawText(
+                displayTextFromReading(reading),
+                cell.rect.left.toFloat(),
+                (cell.rect.top + paint.textSize + 2f).coerceAtMost(output.height - 2f),
+                paint
+            )
+        }
+        return output
+    }
+
+    private fun displayTextFromReading(reading: ScoreReadingEntity): String = when {
+        reading.state == "BLANK" -> "—"
+        !reading.recognizedText.isNullOrBlank() -> reading.recognizedText!!
+        reading.reviewedValue != null -> reading.reviewedValue.toInt().toString()
+        reading.rawValue != null -> reading.rawValue.toInt().toString()
+        else -> "?"
+    }
+
+    private fun genericCellDiagnostic(
+        cell: GenericScoreCell,
+        sourcePath: String,
+        preprocessedPath: String,
+        prepared: PreparedCrop,
+        observations: List<DigitObservation>,
+        assembly: ScoreAssembly
+    ): JSONObject = JSONObject().apply {
+        put("row", cell.rowIndex + 1)
+        put("column", cell.columnIndex + 1)
+        put("mapped_pixel_cell", rectJson(cell.rect))
+        put("source_crop", sourcePath)
+        put("preprocessed_crop", preprocessedPath)
+        put("ink_pixels", prepared.inkPixels)
+        put("ink_ratio", prepared.inkRatio)
+        put("connected_components", prepared.connectedComponents)
+        put("contrast", prepared.contrast)
+        put("blank_score", if (prepared.blank) 1.0 else 0.0)
+        put("recognition_state", assembly.state)
+        put("final_value", assembly.value ?: JSONObject.NULL)
+        put("displayed_value", displayText(observations, assembly))
+        put("confidence", assembly.confidence)
+        put("digits", JSONArray(digitDetails(observations)))
+    }
+
+    private fun rectJson(rect: android.graphics.Rect): JSONObject = JSONObject().apply {
+        put("left", rect.left)
+        put("top", rect.top)
+        put("right", rect.right)
+        put("bottom", rect.bottom)
+        put("width", rect.width())
+        put("height", rect.height())
     }
 
     private fun roiDiagnostic(

@@ -17,9 +17,9 @@ The rejected CameraX/OpenCV Continuous Scan implementation is retained only as a
 
 Supported local test layout families include `SECONDARY_SINGLE_SUBJECT` and `PRIMARY_MULTI_SUBJECT`; the latter places four subject groups and separate CA/Exam ROIs on one physical page. QR is compact identity metadata in the top-centre header zone. QR failure retains the high-resolution page and falls back to OCR/template evidence.
 
-Broadsheet processing is: corrected master page → optional QR/heading identity evidence → template registration when available → high-resolution ROI extraction → border/blank checks → per-digit recognition → score assembly and range validation. Student names come from the template rows rather than score-cell OCR. Generic pages remain saved and are surfaced as identity exceptions.
+Broadsheet processing is: corrected master page → optional identity evidence → known-layout shape match when available or OpenCV table/grid detection → high-resolution score-cell extraction → border/blank checks → per-digit recognition → score assembly and range validation. A generic row/column table is saved even when identity is unknown; identity and score recognition are separate states. Student names come from template rows only when a template is known, otherwise the review table uses row numbers.
 
-Room exposes document states `SCANNED`, `PROCESSING`, `READY`, `REVIEW_REQUIRED`, `UNIDENTIFIED` and `FAILED`. These are user-facing workflow states; implementation details such as manifest IDs are kept out of the normal Records UI.
+Room exposes document states `SCANNED`, `PROCESSING`, `READY`, `REVIEW_REQUIRED`, `UNIDENTIFIED` and `FAILED`. `UNIDENTIFIED` is retained only as legacy identity evidence; it no longer blocks score extraction. Implementation details such as manifest IDs are kept out of the normal Records UI.
 
 ## Post-scan session and scripts
 

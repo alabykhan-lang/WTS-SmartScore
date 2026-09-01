@@ -15,7 +15,7 @@
 
 - Quick/Normal Scan remains Google ML Kit Document Scanner. Broadsheet capture saves corrected pages immediately and defers SmartScore processing until after the operator taps Done.
 - Script capture uses the same Google multipage acquisition foundation and groups the returned page sequence after capture without an identity popup for every student.
-- The recovered physical V2 sheet is selected with its frozen legacy geometry and explicit coordinate origin; populated ink is not converted to BLANK when digit recognition fails.
+- The recovered physical V2 sheet is selected with its frozen legacy geometry and explicit coordinate origin when its landscape grid shape matches; otherwise OpenCV generic grid extraction is used. Populated ink is not converted to BLANK when digit recognition fails.
 - The session manifest and review screen support dynamic page counts, post-capture page operations and template-driven broadsheet grouping.
 - Scripts have no QR dependency and preserve original/corrected pages alongside derived OCR.
 - Result Portal production code is outside this repository and was not modified.
@@ -29,6 +29,6 @@ This environment cannot install an APK on the test phone. The new ARM64 build mu
 3. Ordinary paper at realistic angle, distance, lighting and mild curvature.
 4. One-, two- and three-page manifest completion, plus the primary four-subject ROI alignment.
 5. Script cover/continuation grouping and uncertain-boundary review.
-6. Handwritten score recognition, especially the smaller primary cells.
+6. Handwritten score recognition on the physical V2 page. The build now ships the dedicated digit model and emits per-page table/cell/recognition diagnostics, but device accuracy still requires the filled physical page.
 
 CI success confirms source compilation and packaging; it does not prove these physical behaviors.
