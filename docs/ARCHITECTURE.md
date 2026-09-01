@@ -4,13 +4,12 @@
 
 SmartScore is a local-first scanning and review client. The Result Portal remains the authoritative source for students, classes, subjects, sessions, terms, assessment configuration and official scores. This phase does not modify `wts-result-system`, synchronize production rosters, write scores, or embed privileged database credentials.
 
-## Two scanner paths
+## Google-backed scanner paths
 
-Quick/Normal Scan keeps the Google ML Kit Document Scanner flow for one-to-few pages: boundary guidance, capture, crop, enhancement, multipage review, PDF and JPEG output.
+Quick/Normal Scan keeps the Google ML Kit Document Scanner flow for one-to-few pages: boundary guidance, capture, crop, enhancement, multipage review, PDF and JPEG output. Batch Scan uses the same scanner with a 50-page session limit and defers SmartScore identity/template processing until the Google result returns.
 
-Continuous Scan is a separate capture-first session. CameraX `ImageAnalysis` uses a 1280×720 target for low-latency boundary detection, while `ImageCapture` uses `CAPTURE_MODE_MAXIMIZE_QUALITY` at JPEG quality 95 for the stored master page. The analyzer rotates frames into display coordinates, `PreviewView` uses `FIT_CENTER`, and the overlay applies the same letterbox transform. The accepted page is normalized from the high-resolution still; preview frames are never sent to OCR.
+The rejected CameraX/OpenCV Continuous Scan implementation is retained only as an internal experimental/debug path. It is not linked from the primary home workflow and is not a V1 acquisition guarantee.
 
-`AutoCaptureController` accepts an ordinary page using a four-corner boundary, modest coverage/size, focus, glare and stability checks. After capture it waits for page exit before re-arming, preventing duplicate captures. The continuous screen remains open until the operator taps Finish. Debug builds can long-press the heading to show polygon, frame orientation, coverage, page size, aspect ratio, blur, glare, stability and the exact blocking reason.
 
 ## Smart Broadsheet page model
 
@@ -20,7 +19,7 @@ Supported local test layout families include `SECONDARY_SINGLE_SUBJECT` and `PRI
 
 Broadsheet processing is: corrected master page → template lookup → high-resolution ROI extraction → border/blank checks and recognition → `CONFIRMED`, `REVIEW_REQUIRED`, `INVALID`, `BLANK`, `UNREADABLE` or `MANUALLY_CORRECTED`. Student names come from the template rows rather than score-cell OCR.
 
-## Continuous session and scripts
+## Post-scan session and scripts
 
 The session manifest is the transaction. After Finish it exposes page thumbnails and post-capture delete, rotate, crop, reorder, inspect, add/rescan and process actions. Broadsheet pages are grouped by `sheet_id`/`page_id`; scripts are grouped by strong cover evidence and attach continuation pages to the current script. A random name in an answer is not sufficient to start a new script. Scripts have no QR dependency.
 

@@ -2,9 +2,8 @@
 
 ## Implemented in WTS SmartScore
 
-- Continuous Scan captures high-resolution stills in one uninterrupted session, beeps/vibrates, counts pages, prevents duplicates until page exit, and defers review until Finish.
-- Continuous diagnostics are available in debug mode without exposing engineering terms in normal user mode.
-- Quick/Normal Scan remains the Google ML Kit Document Scanner path.
+- Quick/Normal Scan and Batch Scan use the Google ML Kit Document Scanner path; Batch Scan returns multiple corrected JPEG pages for post-scan processing.
+- The rejected CameraX/OpenCV Continuous Scan remains internal/experimental and is not linked from the primary home workflow.
 - Smart Broadsheet uses flexible `sheet_id`/`page_id` manifests with dynamic or known page counts; no fixed duplex completion rule remains.
 - Local invented templates cover secondary single-subject, one-page, large three-page and primary four-subject layouts. QR payloads carry page identity and sit in the generated test header's top-centre zone; QR failure preserves the page.
 - Compact broadsheet grid review shows normal values quietly and emphasizes only review/invalid/unreadable states with source-crop correction dialogs.

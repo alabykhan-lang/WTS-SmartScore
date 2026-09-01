@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.RectF
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -28,15 +29,19 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 
-/** Quick/Normal scanning path. It shares the flexible page manifest with Continuous Scan. */
+/** Google Quick/Batch scanning path backed by the flexible page manifest. */
 class BroadsheetScannerActivity : AppCompatActivity() {
-    companion object { private const val TAG = "SmartScoreBroadsheet" }
+    companion object {
+        private const val TAG = "SmartScoreBroadsheet"
+        const val EXTRA_BATCH_SCAN = "batch_scan"
+    }
 
-    private data class Candidate(val scanPageNumber: Int, val imagePath: String, val pageId: String?, val method: String)
+    private data class Candidate(val scanPageNumber: Int, val imagePath: String, val pageId: String?, val method: String, val identity: SheetPageIdentity? = null)
     private data class Processed(val page: SheetPageTemplate, val scanId: String, val sourcePath: String, val canonicalPath: String, val readings: List<com.wts.smartscore.data.ScoreReadingEntity>, val processingMs: Long, val identityMethod: String)
 
     private lateinit var status: TextView
     private lateinit var scanButton: Button
+    private val batchMode by lazy { intent.getBooleanExtra(EXTRA_BATCH_SCAN, false) || intent.getBooleanExtra("batch_scan", false) }
     private val scanner by lazy { MlKitDocumentScan.client(50) }
     private val dao by lazy { SmartScoreDatabase.get(this).dao() }
     private val repo by lazy { V2TemplateRepository(this) }
@@ -66,12 +71,16 @@ class BroadsheetScannerActivity : AppCompatActivity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(22, 28, 22, 22) }
         root.addView(TextView(this).apply { text = "Smart Broadsheet"; textSize = 26f; setPadding(0, 0, 0, 6) })
         root.addView(TextView(this).apply {
-            text = "Quick Scan uses Google's document review flow. SmartScore identifies each captured page after scanning, then maps it to the generated template."
+            text = if (batchMode) {
+                "Batch Scan uses Google's multipage document scanner. Capture every broadsheet page, then SmartScore identifies and groups them after you finish."
+            } else {
+                "Quick Scan uses Google's document review flow. SmartScore identifies each captured page after scanning, then maps it to the generated template."
+            }
             textSize = 14f; setPadding(0, 0, 0, 22)
         })
         status = TextView(this).apply { text = "Ready to scan"; gravity = Gravity.CENTER; textSize = 16f; setPadding(12, 18, 12, 18) }
         root.addView(status)
-        scanButton = Button(this).apply { text = "SCAN BROADSHEET"; setOnClickListener { startScan() } }
+        scanButton = Button(this).apply { text = if (batchMode) "START BATCH SCAN" else "SCAN BROADSHEET"; setOnClickListener { startScan() } }
         root.addView(scanButton)
         root.addView(TextView(this).apply { text = "QR identifies a page when available. If QR fails, the image is retained and identity is resolved from page order/template evidence after capture."; textSize = 13f; setPadding(0, 18, 0, 0) })
         setContentView(ScrollView(this).apply { addView(root) })
@@ -104,7 +113,7 @@ class BroadsheetScannerActivity : AppCompatActivity() {
                     ocrPage != null -> "QUICK_SCAN_OCR_ID"
                     orderedPage != null -> "QUICK_SCAN_TEMPLATE_FALLBACK"
                     else -> "QUICK_SCAN_IDENTITY_UNCERTAIN"
-                })
+                }, identity)
             }
             runOnUiThread { processCandidates(candidates) }
         }
@@ -153,6 +162,9 @@ class BroadsheetScannerActivity : AppCompatActivity() {
                     val targetHeight = (source.height * scale).toInt().coerceAtLeast(2)
                     val canonical: Bitmap = if (targetWidth == source.width && targetHeight == source.height) source else Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true)
                     if (canonical !== source) source.recycle()
+                    val registrationQrBounds = candidate.identity?.qrBounds?.let { bounds ->
+                        RectF(bounds.left * scale, bounds.top * scale, bounds.right * scale, bounds.bottom * scale)
+                    }
                     val canonicalFile = File(filesDir, "broadsheets/canonical/${page.pageId}-${System.currentTimeMillis()}.jpg")
                     ImageProcessor.saveJpeg(canonical, canonicalFile)
                     val scanId = UUID.randomUUID().toString()
@@ -160,7 +172,14 @@ class BroadsheetScannerActivity : AppCompatActivity() {
                     val debugDirectory = if (BuildConfig.DEBUG) {
                         File(filesDir, "broadsheets/debug/${page.pageId}-${candidate.scanPageNumber}-${System.currentTimeMillis()}").apply { mkdirs() }
                     } else null
-                    val readings = BroadsheetProcessor(this).process(canonical, page, scanId, debugDirectory, candidate.imagePath)
+                    val readings = BroadsheetProcessor(this).process(
+                        canonical,
+                        page,
+                        scanId,
+                        debugDirectory,
+                        candidate.imagePath,
+                        registrationQrBounds
+                    )
                     processed += Processed(page, scanId, candidate.imagePath, canonicalFile.absolutePath, readings, System.currentTimeMillis() - started, candidate.method)
                     canonical.recycle()
                 }

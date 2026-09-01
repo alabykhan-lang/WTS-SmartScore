@@ -262,7 +262,8 @@ class V2TemplateRepository(@Suppress("UNUSED_PARAMETER") context: android.conten
             layoutFamily = "LEGACY_SECONDARY_SINGLE_SUBJECT",
             subjectGroup = "ECONOMICS",
             templateVersion = smbTestVersion,
-            coordinateOrigin = "TOP_LEFT"
+            coordinateOrigin = "TOP_LEFT",
+            registrationAnchors = listOf(RegistrationAnchorDef("qr", 260.0, 14.0, 17.0, 17.0))
         )
         return TemplateManifest(
             templateVersion = smbTestVersion,

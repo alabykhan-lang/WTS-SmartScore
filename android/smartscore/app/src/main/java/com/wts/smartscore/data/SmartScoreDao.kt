@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
  @Query("SELECT * FROM broadsheets ORDER BY createdAt DESC") fun broadsheets():Flow<List<BroadsheetEntity>>
  @Query("SELECT * FROM broadsheets ORDER BY createdAt DESC") suspend fun broadsheetsNow():List<BroadsheetEntity>
  @Query("SELECT * FROM broadsheets WHERE sheetId=:sheetId LIMIT 1") suspend fun broadsheet(sheetId:String):BroadsheetEntity?
+ @Query("DELETE FROM broadsheets WHERE sheetId=:sheetId") suspend fun deleteBroadsheet(sheetId:String)
  @Query("SELECT * FROM sheet_sides WHERE sheetId=:sheetId ORDER BY sideNumber") suspend fun sides(sheetId:String):List<SheetSideEntity>
  @Query("SELECT COUNT(*) FROM sheet_sides WHERE sheetId=:sheetId") suspend fun sideCount(sheetId:String):Int
  @Query("SELECT * FROM sheet_sides WHERE sheetId=:sheetId ORDER BY sideNumber") suspend fun pages(sheetId:String):List<SheetSideEntity>

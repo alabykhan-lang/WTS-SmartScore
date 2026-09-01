@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#F5F8FC"/>
+  <text x="72" y="94" font-family="sans-serif" font-size="25" font-weight="700" letter-spacing="5" fill="#667085">RECORDS</text>
+  <text x="72" y="158" font-family="sans-serif" font-size="48" font-weight="700" fill="#172033">Your scans, together</text>
+  <text x="72" y="204" font-family="sans-serif" font-size="22" fill="#667085">Find a broadsheet, script or document from one simple local library.</text>
+  <text x="72" y="266" font-family="sans-serif" font-size="20" fill="#667085">3 saved records</text>
+  <rect x="72" y="302" width="936" height="60" rx="30" fill="#155EEF"/>
+  <text x="116" y="341" font-family="sans-serif" font-size="20" fill="#FFFFFF">All</text>
+  <text x="250" y="341" font-family="sans-serif" font-size="20" fill="#667085">Broadsheets</text>
+  <text x="510" y="341" font-family="sans-serif" font-size="20" fill="#667085">Scripts</text>
+  <text x="680" y="341" font-family="sans-serif" font-size="20" fill="#667085">Documents</text>
+  <rect x="72" y="386" width="936" height="68" rx="14" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+  <circle cx="108" cy="420" r="13" fill="none" stroke="#667085" stroke-width="3"/>
+  <path d="M118 430l13 13" stroke="#667085" stroke-width="3"/>
+  <text x="150" y="428" font-family="sans-serif" font-size="22" fill="#98A2B3">Search records</text>
+  <g transform="translate(72 492)">
+    <rect width="936" height="250" rx="24" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+    <text x="34" y="42" font-family="sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#155EEF">BROADSHEET</text>
+    <text x="870" y="46" font-family="sans-serif" font-size="32" fill="#667085">⋮</text>
+    <text x="34" y="92" font-family="sans-serif" font-size="29" font-weight="700" fill="#172033">TEST SS1</text>
+    <text x="34" y="130" font-family="sans-serif" font-size="22" fill="#172033">Economics</text>
+    <text x="34" y="174" font-family="sans-serif" font-size="18" fill="#667085">2 pages  •  2.0-prototype  •  Today, 10:42 PM</text>
+    <rect x="730" y="146" width="160" height="38" rx="19" fill="#E8F0FF"/>
+    <text x="758" y="171" font-family="sans-serif" font-size="16" fill="#155EEF">Review required</text>
+    <rect x="34" y="202" width="856" height="34" rx="17" fill="#155EEF"/>
+    <text x="424" y="225" font-family="sans-serif" font-size="15" font-weight="700" fill="#FFFFFF">OPEN</text>
+  </g>
+  <g transform="translate(72 766)">
+    <rect width="936" height="250" rx="24" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+    <text x="34" y="42" font-family="sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#00A67E">SCRIPT</text>
+    <text x="870" y="46" font-family="sans-serif" font-size="32" fill="#667085">⋮</text>
+    <text x="34" y="92" font-family="sans-serif" font-size="29" font-weight="700" fill="#172033">Adebayo Khalid</text>
+    <text x="34" y="130" font-family="sans-serif" font-size="22" fill="#172033">Economics Examination</text>
+    <text x="34" y="174" font-family="sans-serif" font-size="18" fill="#667085">4 pages  •  Today, 10:48 PM</text>
+    <rect x="762" y="146" width="128" height="38" rx="19" fill="#E3F7F1"/>
+    <text x="790" y="171" font-family="sans-serif" font-size="16" fill="#007A5A">OCR ready</text>
+    <rect x="34" y="202" width="856" height="34" rx="17" fill="#00A67E"/>
+    <text x="424" y="225" font-family="sans-serif" font-size="15" font-weight="700" fill="#FFFFFF">OPEN</text>
+  </g>
+  <g transform="translate(72 1040)">
+    <rect width="936" height="250" rx="24" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+    <text x="34" y="42" font-family="sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#7057D3">DOCUMENT</text>
+    <text x="870" y="46" font-family="sans-serif" font-size="32" fill="#667085">⋮</text>
+    <text x="34" y="92" font-family="sans-serif" font-size="29" font-weight="700" fill="#172033">Staff Meeting Notes</text>
+    <text x="34" y="130" font-family="sans-serif" font-size="22" fill="#172033">PDF and OCR package</text>
+    <text x="34" y="174" font-family="sans-serif" font-size="18" fill="#667085">6 pages  •  Today, 11:03 PM</text>
+    <rect x="806" y="146" width="84" height="38" rx="19" fill="#F0ECFF"/>
+    <text x="827" y="171" font-family="sans-serif" font-size="16" fill="#7057D3">Ready</text>
+    <rect x="34" y="202" width="856" height="34" rx="17" fill="#7057D3"/>
+    <text x="424" y="225" font-family="sans-serif" font-size="15" font-weight="700" fill="#FFFFFF">OPEN</text>
+  </g>
+  <text x="72" y="1430" font-family="sans-serif" font-size="18" fill="#98A2B3">Local-first • searchable • easy to review</text>
+</svg>

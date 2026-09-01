@@ -30,6 +30,8 @@ import java.io.File
 import java.util.UUID
 
 class ScriptScannerActivity : AppCompatActivity() {
+    companion object { const val EXTRA_BATCH_SCAN = "batch_scan" }
+
     private lateinit var status: TextView
     private lateinit var identitySummary: TextView
     private lateinit var thumbs: LinearLayout
@@ -44,6 +46,7 @@ class ScriptScannerActivity : AppCompatActivity() {
     private lateinit var nextScriptButton: Button
 
     private val dao by lazy { SmartScoreDatabase.get(this).dao() }
+    private val batchMode by lazy { intent.getBooleanExtra(EXTRA_BATCH_SCAN, false) || intent.getBooleanExtra("batch_scan", false) }
     private val firstPageScanner by lazy { MlKitDocumentScan.client(1) }
     private val multiPageScanner by lazy { MlKitDocumentScan.client(50) }
 
@@ -76,7 +79,11 @@ class ScriptScannerActivity : AppCompatActivity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(22, 26, 22, 22) }
         root.addView(TextView(this).apply { text = "Script Scanner"; textSize = 26f })
         root.addView(TextView(this).apply {
-            text = "Scan the first page first. SmartScore will suggest the student's identity and subject from the page, then you can add the remaining pages."
+            text = if (batchMode) {
+                "Batch Scan uses Google's multipage document scanner. Capture the script pages together; SmartScore will read the first page identity after capture."
+            } else {
+                "Scan the first page first. SmartScore will suggest the student's identity and subject from the page, then you can add the remaining pages."
+            }
             textSize = 14f
             setPadding(0, 6, 0, 18)
         })
@@ -102,7 +109,10 @@ class ScriptScannerActivity : AppCompatActivity() {
         }
         root.addView(status)
 
-        firstPageButton = Button(this).apply { text = "SCAN FIRST PAGE"; setOnClickListener { startFirstPageScan() } }
+        firstPageButton = Button(this).apply {
+            text = if (batchMode) "START BATCH SCAN" else "SCAN FIRST PAGE"
+            setOnClickListener { if (batchMode) startBatchScan() else startFirstPageScan() }
+        }
         root.addView(firstPageButton)
         addPagesButton = Button(this).apply {
             text = "ADD PAGES"
@@ -165,13 +175,22 @@ class ScriptScannerActivity : AppCompatActivity() {
             loadPages()
             updateIdentityUi()
             val reopen = intent.hasExtra("scriptId")
-            if (!reopen && pagePaths.isEmpty() && savedInstanceState == null) startFirstPageScan()
+            if (!reopen && pagePaths.isEmpty() && savedInstanceState == null) {
+                if (batchMode) startBatchScan() else startFirstPageScan()
+            }
         }
     }
 
     private fun startFirstPageScan() {
         status.text = "Opening scanner for first page…"
         firstPageScanner.getStartScanIntent(this)
+            .addOnSuccessListener { sender -> firstPageLauncher.launch(IntentSenderRequest.Builder(sender).build()) }
+            .addOnFailureListener { e -> status.text = "Scanner unavailable: ${e.message ?: e.javaClass.simpleName}" }
+    }
+
+    private fun startBatchScan() {
+        status.text = "Opening Google scanner for script pages…"
+        multiPageScanner.getStartScanIntent(this)
             .addOnSuccessListener { sender -> firstPageLauncher.launch(IntentSenderRequest.Builder(sender).build()) }
             .addOnFailureListener { e -> status.text = "Scanner unavailable: ${e.message ?: e.javaClass.simpleName}" }
     }

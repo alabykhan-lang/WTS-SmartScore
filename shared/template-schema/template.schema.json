@@ -33,6 +33,20 @@
           "subject_group": { "type": "string" },
           "template_version": { "type": "string" },
           "coordinate_origin": { "enum": ["TOP_LEFT", "BOTTOM_LEFT"] },
+          "registration_anchors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "x", "y", "w", "h"],
+              "properties": {
+                "id": { "type": "string" },
+                "x": { "type": "number" },
+                "y": { "type": "number" },
+                "w": { "type": "number", "exclusiveMinimum": 0 },
+                "h": { "type": "number", "exclusiveMinimum": 0 }
+              }
+            }
+          },
           "rows": {
             "type": "array",
             "items": {

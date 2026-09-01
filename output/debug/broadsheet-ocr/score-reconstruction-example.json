@@ -1,0 +1,53 @@
+{
+  "source": "labelled fixture assembly",
+  "examples": [
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "ca1",
+      "digit_boxes": [
+        0,
+        2
+      ],
+      "displayed_digits": "02",
+      "numeric_score": 2,
+      "maximum": 10,
+      "state": "CONFIRMED"
+    },
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "ca2",
+      "digit_boxes": [
+        0,
+        9
+      ],
+      "displayed_digits": "09",
+      "numeric_score": 9,
+      "maximum": 10,
+      "state": "CONFIRMED"
+    },
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "exam",
+      "digit_boxes": [
+        4,
+        2
+      ],
+      "displayed_digits": "42",
+      "numeric_score": 42,
+      "maximum": 70,
+      "state": "CONFIRMED"
+    },
+    {
+      "student": "BAKARE FATHIAT",
+      "assessment": "exam",
+      "digit_boxes": [
+        5,
+        1
+      ],
+      "displayed_digits": "51",
+      "numeric_score": 51,
+      "maximum": 70,
+      "state": "CONFIRMED"
+    }
+  ]
+}

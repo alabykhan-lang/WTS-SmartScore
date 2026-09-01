@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
 import com.wts.smartscore.R
-import com.wts.smartscore.scanner.ContinuousSessionProcessor
 
 class MainActivity : AppCompatActivity() {
     private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -36,26 +35,26 @@ class MainActivity : AppCompatActivity() {
         root.addView(TextView(this).apply { this.text = "WTS SMARTSCORE"; textSize = 29f; setTextColor(text); setTypeface(typeface, Typeface.BOLD) })
         root.addView(TextView(this).apply { this.text = "Smart Scanning • Score Capture • Script Digitization"; textSize = 14f; setTextColor(muted); setPadding(0, 6, 0, 24) })
         root.addView(section("SCAN & DIGITIZE"))
-        root.addView(productCard("▦", "Smart Broadsheet", "Quick Scan • Continuous Scan", primary) { chooseScanMode("Smart Broadsheet", "Quick Scan", "Continuous Scan", BroadsheetScannerActivity::class.java, ContinuousSessionProcessor.MODE_BROADSHEET) })
-        root.addView(productCard("▤", "Script Scanner", "Single Script • Continuous Scripts", accent) { chooseScanMode("Script Scanner", "Single Script", "Continuous Scripts", ScriptScannerActivity::class.java, ContinuousSessionProcessor.MODE_SCRIPT) })
-        root.addView(productCard("▧", "Document Scanner", "Normal Scan • Continuous Scan", primary) { chooseScanMode("Document Scanner", "Normal Scan", "Continuous Scan", GeneralScannerActivity::class.java, ContinuousSessionProcessor.MODE_DOCUMENT) })
+        root.addView(productCard("▦", "Smart Broadsheet", "Quick Scan • Batch Scan", primary) { chooseScanMode("Smart Broadsheet", "Quick Scan", "Batch Scan", BroadsheetScannerActivity::class.java) })
+        root.addView(productCard("▤", "Script Scanner", "Single Script • Batch Scan", accent) { chooseScanMode("Script Scanner", "Single Script", "Batch Scan", ScriptScannerActivity::class.java) })
+        root.addView(productCard("▧", "Document Scanner", "Normal Scan • Batch Scan", primary) { chooseScanMode("Document Scanner", "Normal Scan", "Batch Scan", GeneralScannerActivity::class.java) })
         root.addView(productCard("✦", "AI Workspace", "Prepare or mark digitized scripts", accent) { startActivity(Intent(this, AiMarkerActivity::class.java)) })
 
         root.addView(section("RECORDS").apply { setPadding(0, 18, 0, 10) })
-        val records = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        records.addView(compactCard("Broadsheets", "Saved score batches") { startActivity(Intent(this, SavedBroadsheetsActivity::class.java)) }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = 7 })
-        records.addView(compactCard("Scripts", "Saved script packages") { startActivity(Intent(this, SavedScriptsActivity::class.java)) }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = 7 })
-        root.addView(records)
+        root.addView(compactCard("All records", "Broadsheets • Scripts • Documents") {
+            startActivity(Intent(this, RecordsActivity::class.java))
+        })
         root.addView(TextView(this).apply { this.text = "Private workspace • Local-first scanning"; textSize = 12f; gravity = Gravity.CENTER; setTextColor(muted); setPadding(0, 28, 0, 4) })
         setContentView(ScrollView(this).apply { addView(root) })
     }
 
-    private fun chooseScanMode(title: String, normalLabel: String, continuousLabel: String, normalActivity: Class<*>, continuousMode: String) {
+    private fun chooseScanMode(title: String, singleLabel: String, batchLabel: String, activity: Class<*>) {
         AlertDialog.Builder(this)
             .setTitle(title)
-            .setItems(arrayOf(normalLabel, continuousLabel)) { _, which ->
-                if (which == 0) startActivity(Intent(this, normalActivity))
-                else startActivity(Intent(this, ContinuousScanActivity::class.java).putExtra(ContinuousScanActivity.EXTRA_MODE, continuousMode))
+            .setItems(arrayOf(singleLabel, batchLabel)) { _, which ->
+                startActivity(Intent(this, activity).apply {
+                    putExtra("batch_scan", which == 1)
+                })
             }
             .show()
     }

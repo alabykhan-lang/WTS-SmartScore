@@ -7,13 +7,13 @@ WTS SmartScore is a local-first Android productivity tool for high-volume docume
 ## Current product boundary
 
 - Quick/Normal Scan uses Google ML Kit for one-to-few pages and manual review.
-- Continuous Scan captures a pile of pages without per-page dialogs, then opens a post-finish review session.
+- Batch Scan uses Google's multipage document scanner to capture a pile of pages in one review session, then opens post-scan processing.
 - Smart Broadsheets use flexible `sheet_id`/`page_id` template manifests, optional QR identity and layout families including secondary single-subject and primary multi-subject sheets.
 - Scripts require no QR. Cover/continuation grouping and labelled OCR identity suggestions are reviewed after capture.
 - Exports include PDF, searchable PDF, corrected JPEG packages, TXT, OCR JSON, DOCX and structured CSV/XLSX where appropriate.
 - The Result Portal remains authoritative and is not modified by this repository. There are no production score writes or privileged database credentials.
 
-In a debug APK, long-press the Continuous Scan heading to show oriented analysis size, detected polygon, coverage, page size, aspect ratio, blur, glare, stability and the exact capture-block reason. Normal user mode keeps these diagnostics hidden.
+The former CameraX/OpenCV Continuous Scan remains available only as an internal experimental/debug path. Normal user mode uses Google ML Kit for reliable Quick/Batch acquisition.
 
 ## Modules
 

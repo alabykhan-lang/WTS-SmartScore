@@ -16,11 +16,15 @@ data class DigitGuess(
 
 /** Alternative numeric recognizers can be added without changing ROI processing. */
 interface DigitRecognizer {
+    val engineName: String
     fun recognize(crop: Bitmap): DigitGuess
+    fun close() = Unit
 }
 
 /** Current on-device implementation; deliberately kept behind DigitRecognizer. */
 class MlKitDigitRecognizer(private val recognizer: TextRecognizer) : DigitRecognizer {
+    override val engineName: String = "ML_KIT_TEXT_FALLBACK"
+
     override fun recognize(crop: Bitmap): DigitGuess {
         val raw = runCatching { Tasks.await(recognizer.process(InputImage.fromBitmap(crop, 0))).text }.getOrDefault("")
         val normalized = raw.filter(Char::isDigit)
@@ -48,7 +52,8 @@ data class DigitObservation(
     val contrast: Double,
     val rawOcrText: String,
     val normalizedOcrText: String,
-    val alignmentValid: Boolean = true
+    val alignmentValid: Boolean = true,
+    val recognizerEngine: String = ""
 )
 
 data class ScoreAssembly(

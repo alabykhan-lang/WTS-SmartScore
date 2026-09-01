@@ -3,6 +3,14 @@ package com.wts.smartscore.scanner
 import org.json.JSONArray
 import org.json.JSONObject
 
+data class RegistrationAnchorDef(
+    val id: String,
+    val x: Double,
+    val y: Double,
+    val w: Double,
+    val h: Double
+)
+
 data class DigitBoxDef(
     val x: Double,
     val y: Double,
@@ -46,7 +54,9 @@ data class SheetPageTemplate(
     val subjectGroup: String,
     val templateVersion: String,
     /** Template coordinates may come from PDF bottom-left or image top-left. */
-    val coordinateOrigin: String = "BOTTOM_LEFT"
+    val coordinateOrigin: String = "BOTTOM_LEFT",
+    /** Optional printed anchor used to refine registration after scanner cropping. */
+    val registrationAnchors: List<RegistrationAnchorDef> = emptyList()
 ) {
     // Compatibility accessors for the pre-v3 scanner code. These are page
     // identities now; they are not a duplex/side requirement.
@@ -97,6 +107,17 @@ data class TemplateManifest(
                     put("subject_group", page.subjectGroup)
                     put("template_version", page.templateVersion)
                     put("coordinate_origin", page.coordinateOrigin)
+                    put("registration_anchors", JSONArray().apply {
+                        page.registrationAnchors.forEach { anchor ->
+                            put(JSONObject().apply {
+                                put("id", anchor.id)
+                                put("x", anchor.x)
+                                put("y", anchor.y)
+                                put("w", anchor.w)
+                                put("h", anchor.h)
+                            })
+                        }
+                    })
                     put("rows", JSONArray().apply {
                         page.rows.forEach { row ->
                             put(JSONObject().apply {

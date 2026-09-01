@@ -21,10 +21,42 @@
       "preprocessed": "output/debug/broadsheet-ocr/roi/student-001-ca1-preprocessed.jpg"
     },
     {
+      "student": "ADIGUN BAZIM",
+      "assessment": "ca1",
+      "digit_position": 0,
+      "ground_truth": 0,
+      "source": "output/debug/broadsheet-ocr/digit-samples/ADIGUN-BAZIM-CA1-digit1.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/ADIGUN-BAZIM-CA1-digit1-preprocessed.jpg"
+    },
+    {
+      "student": "ADIGUN BAZIM",
+      "assessment": "ca1",
+      "digit_position": 1,
+      "ground_truth": 2,
+      "source": "output/debug/broadsheet-ocr/digit-samples/ADIGUN-BAZIM-CA1-digit2.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/ADIGUN-BAZIM-CA1-digit2-preprocessed.jpg"
+    },
+    {
       "student": "BAKARE FATHIAT",
       "assessment": "exam",
       "source": "output/debug/broadsheet-ocr/roi/student-002-exam-source.jpg",
       "preprocessed": "output/debug/broadsheet-ocr/roi/student-002-exam-preprocessed.jpg"
+    },
+    {
+      "student": "BAKARE FATHIAT",
+      "assessment": "exam",
+      "digit_position": 0,
+      "ground_truth": 5,
+      "source": "output/debug/broadsheet-ocr/digit-samples/BAKARE-FATHIAT-EXAM-digit1.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/BAKARE-FATHIAT-EXAM-digit1-preprocessed.jpg"
+    },
+    {
+      "student": "BAKARE FATHIAT",
+      "assessment": "exam",
+      "digit_position": 1,
+      "ground_truth": 1,
+      "source": "output/debug/broadsheet-ocr/digit-samples/BAKARE-FATHIAT-EXAM-digit2.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/BAKARE-FATHIAT-EXAM-digit2-preprocessed.jpg"
     },
     {
       "student": "RAJI MARIAM",
@@ -34,31 +66,77 @@
     },
     {
       "student": "RAJI MARIAM",
+      "assessment": "ca1",
+      "digit_position": 0,
+      "ground_truth": 0,
+      "source": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA1-digit1.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA1-digit1-preprocessed.jpg"
+    },
+    {
+      "student": "RAJI MARIAM",
+      "assessment": "ca1",
+      "digit_position": 1,
+      "ground_truth": 4,
+      "source": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA1-digit2.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA1-digit2-preprocessed.jpg"
+    },
+    {
+      "student": "RAJI MARIAM",
       "assessment": "ca2",
       "source": "output/debug/broadsheet-ocr/roi/student-008-ca2-source.jpg",
       "preprocessed": "output/debug/broadsheet-ocr/roi/student-008-ca2-preprocessed.jpg"
+    },
+    {
+      "student": "RAJI MARIAM",
+      "assessment": "ca2",
+      "digit_position": 0,
+      "ground_truth": 0,
+      "source": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA2-digit1.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA2-digit1-preprocessed.jpg"
+    },
+    {
+      "student": "RAJI MARIAM",
+      "assessment": "ca2",
+      "digit_position": 1,
+      "ground_truth": 5,
+      "source": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA2-digit2.jpg",
+      "preprocessed": "output/debug/broadsheet-ocr/digit-samples/RAJI-MARIAM-CA2-digit2-preprocessed.jpg"
     }
   ],
+  "labelled_dataset": {
+    "labels_csv": "output/debug/broadsheet-ocr/digit-dataset/labels.csv",
+    "manifest": "output/debug/broadsheet-ocr/digit-dataset/manifest.json",
+    "labelled_digit_cells": 54,
+    "blank_cells": 2
+  },
   "synthetic_values": {
-    "1:ca1": "0",
-    "1:ca2": "1",
+    "1:ca1": "02",
+    "1:ca2": "09",
     "1:exam": "42",
-    "2:ca1": "2",
-    "2:ca2": "3",
+    "2:ca1": "03",
+    "2:ca2": "04",
     "2:exam": "51",
-    "3:ca1": "4",
-    "3:ca2": "5",
+    "3:ca1": "05",
+    "3:ca2": "06",
     "3:exam": "52",
-    "4:ca1": "6",
-    "4:ca2": "7",
-    "4:exam": "58",
-    "5:ca1": "8",
-    "5:ca2": "9",
-    "5:exam": "60",
-    "6:ca1": "10",
-    "6:ca2": "61",
-    "6:exam": "62",
-    "7:ca1": "67"
+    "4:ca1": "07",
+    "4:ca2": "08",
+    "4:exam": "53",
+    "5:ca1": "10",
+    "5:ca2": "00",
+    "5:exam": "58",
+    "6:ca1": "01",
+    "6:ca2": "04",
+    "6:exam": "60",
+    "7:ca1": "02",
+    "7:ca2": "03",
+    "7:exam": "61",
+    "8:ca1": "04",
+    "8:ca2": "05",
+    "8:exam": "62",
+    "9:ca1": "06",
+    "9:ca2": "07",
+    "9:exam": "67"
   },
   "roi_count": 54,
   "diagnostic_fields": [

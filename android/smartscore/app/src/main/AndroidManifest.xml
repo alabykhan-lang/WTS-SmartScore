@@ -12,6 +12,7 @@
         <activity android:name=".ui.SavedScriptsActivity" android:exported="false" />
         <activity android:name=".ui.ScriptReviewActivity" android:exported="false" />
         <activity android:name=".ui.SavedBroadsheetsActivity" android:exported="false" />
+        <activity android:name=".ui.RecordsActivity" android:exported="false" />
         <activity android:name=".ui.BroadsheetReviewActivity" android:exported="false" />
         <activity android:name=".ui.GeneralScannerActivity" android:exported="false" />
         <activity android:name=".ui.ScriptScannerActivity" android:exported="false" />

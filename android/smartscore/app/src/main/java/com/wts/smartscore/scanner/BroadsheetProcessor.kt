@@ -8,7 +8,6 @@ import android.graphics.Paint
 import android.graphics.RectF
 import com.wts.smartscore.data.ScoreReadingEntity
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.TextRecognizer
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import org.json.JSONArray
 import org.json.JSONObject
@@ -59,26 +58,30 @@ class BroadsheetProcessor(private val context: Context) {
         side: SheetPageTemplate,
         scanId: String,
         diagnosticDir: File?,
-        inputPath: String? = null
-    ): List<ScoreReadingEntity> = processDetailed(bitmap, side, scanId, diagnosticDir, inputPath).readings
+        inputPath: String? = null,
+        qrBounds: RectF? = null
+    ): List<ScoreReadingEntity> = processDetailed(bitmap, side, scanId, diagnosticDir, inputPath, qrBounds).readings
 
     fun processDetailed(
         bitmap: Bitmap,
         side: SheetPageTemplate,
         scanId: String,
         diagnosticDir: File?,
-        inputPath: String? = null
+        inputPath: String? = null,
+        qrBounds: RectF? = null
     ): ProcessOutput {
         diagnosticDir?.mkdirs()
         val roiDir = (diagnosticDir?.let { File(it, "roi") }
             ?: File(context.filesDir, "broadsheet-crops")).apply { mkdirs() }
-        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        val digitRecognizer = DigitRecognizerFactory.create(context, textRecognizer)
+        val registration = TemplateRegistrar.register(bitmap, side, qrBounds)
         val diagnostics = JSONArray()
         try {
             if (diagnosticDir != null) {
                 saveInputArtifact(bitmap, inputPath, File(diagnosticDir, "01-input-scan.jpg"))
                 ImageProcessor.saveJpeg(bitmap, File(diagnosticDir, "02-canonical-page.jpg"), 98)
-                val overlay = renderTemplateOverlay(bitmap, side)
+                val overlay = renderTemplateOverlay(bitmap, side, registration)
                 ImageProcessor.saveJpeg(overlay, File(diagnosticDir, "03-template-overlay.jpg"), 98)
                 ImageProcessor.saveJpeg(overlay, File(diagnosticDir, "template-overlay.jpg"), 98)
                 overlay.recycle()
@@ -87,7 +90,7 @@ class BroadsheetProcessor(private val context: Context) {
             val readings = side.rows.flatMap { row ->
                 row.rois.map { roi ->
                     val prefix = "student-${row.rowNo.toString().padStart(3, '0')}-${safePart(roi.assessmentId)}"
-                    val scoreRect = pixelRect(roi.x, roi.y, roi.w, roi.h, side, bitmap)
+                    val scoreRect = pixelRect(roi.x, roi.y, roi.w, roi.h, side, bitmap, registration)
                     val scoreCrop = scoreRect?.let { Bitmap.createBitmap(bitmap, it.left, it.top, it.width, it.height) }
                     val scorePrepared = scoreCrop?.let(::prepareCrop)
                     val scoreSourcePath = scoreCrop?.let { crop ->
@@ -106,7 +109,8 @@ class BroadsheetProcessor(private val context: Context) {
                             bitmap = bitmap,
                             side = side,
                             digitBox = digitBox,
-                            recognizer = recognizer,
+                            recognizer = digitRecognizer,
+                            registration = registration,
                             outputDir = roiDir,
                             prefix = prefix
                         )
@@ -129,7 +133,7 @@ class BroadsheetProcessor(private val context: Context) {
                         cropPath = scoreSourcePath,
                         reviewedAt = null
                     )
-                    diagnostics.put(roiDiagnostic(row, roi, scoreRect, scorePrepared, scoreSourcePath, scorePreprocessedPath, observations, assembly))
+                    diagnostics.put(roiDiagnostic(row, roi, side, scoreRect, scorePrepared, scoreSourcePath, scorePreprocessedPath, observations, assembly, registration))
                     scorePrepared?.bitmap?.recycle()
                     scoreCrop?.recycle()
                     reading
@@ -149,6 +153,8 @@ class BroadsheetProcessor(private val context: Context) {
                     put("canonical_height", side.pageH)
                     put("source_width", bitmap.width)
                     put("source_height", bitmap.height)
+                    put("registration", registration.toJson())
+                    put("recognizer_engine", digitRecognizer.engineName)
                     put("roi_count", diagnostics.length())
                     put("rois", diagnostics)
                 }
@@ -156,7 +162,8 @@ class BroadsheetProcessor(private val context: Context) {
             }
             return ProcessOutput(readings, diagnosticFile)
         } finally {
-            recognizer.close()
+            digitRecognizer.close()
+            textRecognizer.close()
         }
     }
 
@@ -164,11 +171,12 @@ class BroadsheetProcessor(private val context: Context) {
         bitmap: Bitmap,
         side: SheetPageTemplate,
         digitBox: DigitBoxDef,
-        recognizer: TextRecognizer,
+        recognizer: DigitRecognizer,
+        registration: TemplateRegistration,
         outputDir: File,
         prefix: String
     ): DigitObservation {
-        val rect = pixelRect(digitBox.x, digitBox.y, digitBox.w, digitBox.h, side, bitmap)
+        val rect = pixelRect(digitBox.x, digitBox.y, digitBox.w, digitBox.h, side, bitmap, registration)
         if (rect == null) {
             return DigitObservation(
                 index = digitBox.index,
@@ -183,7 +191,8 @@ class BroadsheetProcessor(private val context: Context) {
                 contrast = 0.0,
                 rawOcrText = "",
                 normalizedOcrText = "",
-                alignmentValid = false
+                alignmentValid = false,
+                recognizerEngine = recognizer.engineName
             )
         }
 
@@ -197,7 +206,7 @@ class BroadsheetProcessor(private val context: Context) {
         val guess = if (prepared.blank) {
             DigitGuess(value = null, confidence = 1.0, blank = true)
         } else {
-            MlKitDigitRecognizer(recognizer).recognize(prepared.bitmap)
+            recognizer.recognize(prepared.bitmap)
         }
         val observation = DigitObservation(
             index = digitBox.index,
@@ -211,7 +220,8 @@ class BroadsheetProcessor(private val context: Context) {
             connectedComponents = prepared.connectedComponents,
             contrast = prepared.contrast,
             rawOcrText = guess.rawText,
-            normalizedOcrText = guess.normalizedText
+            normalizedOcrText = guess.normalizedText,
+            recognizerEngine = recognizer.engineName
         )
         prepared.bitmap.recycle()
         sourceCrop.recycle()
@@ -357,14 +367,25 @@ class BroadsheetProcessor(private val context: Context) {
         }
     }
 
-    private fun pixelRect(x: Double, y: Double, w: Double, h: Double, side: SheetPageTemplate, bitmap: Bitmap): PixelRect? {
+    private fun pixelRect(
+        x: Double,
+        y: Double,
+        w: Double,
+        h: Double,
+        side: SheetPageTemplate,
+        bitmap: Bitmap,
+        registration: TemplateRegistration
+    ): PixelRect? {
         if (side.pageW <= 0.0 || side.pageH <= 0.0 || w <= 0.0 || h <= 0.0 || bitmap.width < 2 || bitmap.height < 2) return null
-        val left = (x / side.pageW * bitmap.width).roundToInt()
-        val right = ((x + w) / side.pageW * bitmap.width).roundToInt()
+        val source = registration.sourceRect
+        val sourceWidth = source.width().toDouble()
+        val sourceHeight = source.height().toDouble()
+        val left = (source.left + x / side.pageW * sourceWidth).roundToInt()
+        val right = (source.left + (x + w) / side.pageW * sourceWidth).roundToInt()
         val topFraction = if (side.coordinateOrigin.equals("TOP_LEFT", true)) y / side.pageH else (side.pageH - (y + h)) / side.pageH
         val bottomFraction = if (side.coordinateOrigin.equals("TOP_LEFT", true)) (y + h) / side.pageH else (side.pageH - y) / side.pageH
-        val top = (topFraction * bitmap.height).roundToInt()
-        val bottom = (bottomFraction * bitmap.height).roundToInt()
+        val top = (source.top + topFraction * sourceHeight).roundToInt()
+        val bottom = (source.top + bottomFraction * sourceHeight).roundToInt()
         val safeLeft = left.coerceIn(0, bitmap.width - 1)
         val safeTop = top.coerceIn(0, bitmap.height - 1)
         val safeRight = right.coerceIn(safeLeft + 1, bitmap.width)
@@ -373,7 +394,7 @@ class BroadsheetProcessor(private val context: Context) {
         return PixelRect(safeLeft, safeTop, safeRight, safeBottom)
     }
 
-    private fun renderTemplateOverlay(bitmap: Bitmap, side: SheetPageTemplate): Bitmap {
+    private fun renderTemplateOverlay(bitmap: Bitmap, side: SheetPageTemplate, registration: TemplateRegistration): Bitmap {
         val output = bitmap.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(output)
         val roiPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -393,7 +414,7 @@ class BroadsheetProcessor(private val context: Context) {
         }
         side.rows.forEach { row ->
             row.rois.forEach { roi ->
-                pixelRect(roi.x, roi.y, roi.w, roi.h, side, output)?.let { rect ->
+                pixelRect(roi.x, roi.y, roi.w, roi.h, side, output, registration)?.let { rect ->
                     canvas.drawRect(RectF(rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat()), roiPaint)
                     canvas.drawText(
                         "${row.rowNo}/${roi.assessmentId}",
@@ -403,7 +424,7 @@ class BroadsheetProcessor(private val context: Context) {
                     )
                 }
                 roi.digitBoxes.forEach { digit ->
-                    pixelRect(digit.x, digit.y, digit.w, digit.h, side, output)?.let { rect ->
+                    pixelRect(digit.x, digit.y, digit.w, digit.h, side, output, registration)?.let { rect ->
                         canvas.drawRect(RectF(rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat()), digitPaint)
                     }
                 }
@@ -415,12 +436,14 @@ class BroadsheetProcessor(private val context: Context) {
     private fun roiDiagnostic(
         row: RowDef,
         roi: ScoreRoiDef,
+        side: SheetPageTemplate,
         pixelRect: PixelRect?,
         prepared: PreparedCrop?,
         sourcePath: String?,
         preprocessedPath: String?,
         observations: List<DigitObservation>,
-        assembly: ScoreAssembly
+        assembly: ScoreAssembly,
+        registration: TemplateRegistration
     ): JSONObject = JSONObject().apply {
         put("student", JSONObject().apply {
             put("row", row.rowNo)
@@ -434,8 +457,9 @@ class BroadsheetProcessor(private val context: Context) {
             put("y", roi.y)
             put("w", roi.w)
             put("h", roi.h)
-            put("coordinate_origin", "template")
+            put("coordinate_origin", side.coordinateOrigin)
         })
+        put("registration", registration.toJson())
         put("mapped_pixel_roi", pixelRect?.let {
             JSONObject().apply {
                 put("x", it.left)
@@ -471,6 +495,7 @@ class BroadsheetProcessor(private val context: Context) {
                     put("contrast", digit.contrast)
                     put("raw_ocr_text", digit.rawOcrText)
                     put("normalized_ocr_text", digit.normalizedOcrText)
+                    put("recognizer_engine", digit.recognizerEngine)
                 })
             }
         })

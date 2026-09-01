@@ -5,7 +5,7 @@
   "class": "TEST SS1",
   "subject_group": "Economics",
   "layout_id": "secondary-economics-v3",
-  "layout_family": "SECONDARY_SINGLE_SUBJECT",
+  "layout_family": "LEGACY_SECONDARY_SINGLE_SUBJECT",
   "session": "2026/2027",
   "term": "FIRST",
   "expected_page_ids": ["WTS-SM-V2-DEMO-0001-P1", "WTS-SM-V2-DEMO-0001-P2"],

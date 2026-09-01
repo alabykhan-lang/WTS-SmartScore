@@ -1,6 +1,15 @@
 {
   "test_scope": "geometry_ink_and_score_assembly",
   "mlkit_accuracy_measured": false,
+  "labelled_digit_evaluation": {
+    "total_labelled_digits": 54,
+    "correct": null,
+    "incorrect": null,
+    "doubtful": null,
+    "accuracy": null,
+    "status": "NOT_RUN_ON_ANDROID_MODEL",
+    "reason": "No labelled physical handwriting corpus or verified TFLite model is embedded in this recovery build."
+  },
   "cases": [
     {
       "case": "0",
@@ -153,6 +162,126 @@
       "passed": true
     },
     {
+      "case": "02",
+      "input_digit_boxes": [
+        0,
+        2
+      ],
+      "expected_value": 2,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 2,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "03",
+      "input_digit_boxes": [
+        0,
+        3
+      ],
+      "expected_value": 3,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 3,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "04",
+      "input_digit_boxes": [
+        0,
+        4
+      ],
+      "expected_value": 4,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 4,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "05",
+      "input_digit_boxes": [
+        0,
+        5
+      ],
+      "expected_value": 5,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 5,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "06",
+      "input_digit_boxes": [
+        0,
+        6
+      ],
+      "expected_value": 6,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 6,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "07",
+      "input_digit_boxes": [
+        0,
+        7
+      ],
+      "expected_value": 7,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 7,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "08",
+      "input_digit_boxes": [
+        0,
+        8
+      ],
+      "expected_value": 8,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 8,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "09",
+      "input_digit_boxes": [
+        0,
+        9
+      ],
+      "expected_value": 9,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 9,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
       "case": "10",
       "input_digit_boxes": [
         1,
@@ -207,6 +336,21 @@
       "expected_state": "CONFIRMED",
       "result": {
         "value": 52,
+        "state": "CONFIRMED",
+        "validation": "WITHIN_MAXIMUM"
+      },
+      "passed": true
+    },
+    {
+      "case": "53",
+      "input_digit_boxes": [
+        5,
+        3
+      ],
+      "expected_value": 53,
+      "expected_state": "CONFIRMED",
+      "result": {
+        "value": 53,
         "state": "CONFIRMED",
         "validation": "WITHIN_MAXIMUM"
       },

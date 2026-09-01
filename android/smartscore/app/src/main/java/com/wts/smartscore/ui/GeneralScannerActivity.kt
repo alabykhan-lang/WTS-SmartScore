@@ -26,6 +26,8 @@ import org.json.JSONObject
 import java.io.File
 
 class GeneralScannerActivity : AppCompatActivity() {
+    companion object { const val EXTRA_BATCH_SCAN = "batch_scan" }
+
     private lateinit var status: TextView
     private lateinit var thumbs: LinearLayout
     private lateinit var openPdf: Button
@@ -33,6 +35,7 @@ class GeneralScannerActivity : AppCompatActivity() {
     private lateinit var openDocx: Button
     private lateinit var sharePackage: Button
     private var current: SmartScanResult? = null
+    private val batchMode by lazy { intent.getBooleanExtra(EXTRA_BATCH_SCAN, false) || intent.getBooleanExtra("batch_scan", false) }
     private val scanner by lazy { MlKitDocumentScan.client(50) }
 
     private val launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { activityResult ->
@@ -59,7 +62,11 @@ class GeneralScannerActivity : AppCompatActivity() {
         }
         root.addView(TextView(this).apply { text = "Document Scanner"; textSize = 26f })
         root.addView(TextView(this).apply {
-            text = "Scan ordinary documents to clean corrected pages and a multipage PDF."
+            text = if (batchMode) {
+                "Batch Scan uses Google's multipage document scanner. Capture the whole stack, then review the corrected pages and exports together."
+            } else {
+                "Scan ordinary documents to clean corrected pages and a multipage PDF."
+            }
             textSize = 14f
             setPadding(0, 6, 0, 18)
         })
@@ -70,7 +77,7 @@ class GeneralScannerActivity : AppCompatActivity() {
             setPadding(0, 18, 0, 18)
         }
         root.addView(status)
-        root.addView(Button(this).apply { text = "SCAN DOCUMENT"; setOnClickListener { startScan() } })
+        root.addView(Button(this).apply { text = if (batchMode) "START BATCH SCAN" else "SCAN DOCUMENT"; setOnClickListener { startScan() } })
         thumbs = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         root.addView(HorizontalScrollView(this).apply { addView(thumbs) }, LinearLayout.LayoutParams(-1, 220))
         openPdf = Button(this).apply {
