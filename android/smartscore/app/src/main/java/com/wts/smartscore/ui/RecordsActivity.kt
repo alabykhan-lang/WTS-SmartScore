@@ -106,7 +106,7 @@ class RecordsActivity : AppCompatActivity() {
         val tabRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         Filter.entries.forEach { filter ->
             val tab = TextView(this).apply {
-                text = filter.label
+                this.text = filter.label
                 textSize = 13f
                 gravity = Gravity.CENTER
                 setPadding(dp(14), dp(9), dp(14), dp(9))
@@ -131,7 +131,7 @@ class RecordsActivity : AppCompatActivity() {
         query = EditText(this).apply {
             hint = "Search records"
             textSize = 14f
-            singleLine = true
+            isSingleLine = true
             setPadding(dp(14), 0, dp(14), 0)
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
