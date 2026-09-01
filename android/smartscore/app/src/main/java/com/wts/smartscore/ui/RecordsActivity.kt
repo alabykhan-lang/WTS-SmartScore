@@ -161,10 +161,12 @@ class RecordsActivity : AppCompatActivity() {
                     result += RecordItem(
                         key = "broadsheet:${sheet.sheetId}",
                         kind = Kind.BROADSHEET,
-                        title = sheet.classLabel.ifBlank { "Smart Broadsheet" },
-                        subtitle = sheet.subject.ifBlank { "Subject not identified" },
-                        detail = "${pages.size} page${if (pages.size == 1) "" else "s"} • ${sheet.templateVersion}",
-                        status = friendlyStatus(sheet.reviewStatus),
+                        title = sheet.classLabel.takeUnless { it.isBlank() || it.equals("Broadsheet", true) } ?: "Unidentified broadsheet",
+                        subtitle = listOf(sheet.subject, sheet.term.takeIf { it.isNotBlank() })
+                            .filterNotNull().filter { it.isNotBlank() && !it.equals("Identity pending", true) }.joinToString(" • ")
+                            .ifBlank { "Identity pending" },
+                        detail = "${pages.size} page${if (pages.size == 1) "" else "s"} • ${sheet.recognizedCount} score${if (sheet.recognizedCount == 1) "" else "s"} recognised${if (sheet.reviewCount > 0) " • ${sheet.reviewCount} need review" else ""}",
+                        status = broadsheetStatus(sheet),
                         timestamp = sheet.createdAt,
                         id = sheet.sheetId
                     )
@@ -174,14 +176,15 @@ class RecordsActivity : AppCompatActivity() {
                         key = "script:${script.scriptId}",
                         kind = Kind.SCRIPT,
                         title = script.studentRef?.ifBlank { null } ?: "Unnamed script",
-                        subtitle = script.subject?.ifBlank { null } ?: "Subject not identified",
+                        subtitle = script.subject?.ifBlank { null } ?: "Identity pending",
                         detail = "${script.pageCount} page${if (script.pageCount == 1) "" else "s"}",
-                        status = if (script.completionState.equals("COMPLETED", true)) "OCR ready" else friendlyStatus(script.completionState),
+                        status = if (script.identityStatus.equals("CONFIDENT", true) && script.completionState.equals("OCR_READY", true)) "OCR ready" else if (script.completionState.equals("FAILED", true)) "Processing failed" else "Needs identity review",
                         timestamp = script.createdAt,
                         id = script.scriptId
                     )
                 }
-                documentRecords()
+                result += documentRecords()
+                result
             }
             countSummary.text = "${items.size} saved record${if (items.size == 1) "" else "s"}"
             render()
@@ -413,7 +416,15 @@ class RecordsActivity : AppCompatActivity() {
         }
     }
 
-    private fun friendlyStatus(value: String): String = value.replace('_', ' ').lowercase(Locale.ROOT).replaceFirstChar { it.uppercase() }
+    private fun broadsheetStatus(sheet: com.wts.smartscore.data.BroadsheetEntity): String = when (sheet.reviewStatus) {
+        "SCANNED" -> "Saved locally"
+        "PROCESSING" -> "Processing"
+        "READY" -> "Ready"
+        "REVIEW_REQUIRED" -> "Needs review"
+        "UNIDENTIFIED" -> "Identity needs attention"
+        "FAILED" -> "Processing failed"
+        else -> "Saved locally"
+    }
 
     private fun formatDate(timestamp: Long): String = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(timestamp))
     private fun pillBackground(color: Int): GradientDrawable = GradientDrawable().apply {

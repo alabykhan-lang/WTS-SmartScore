@@ -2,13 +2,13 @@ package com.wts.smartscore.ui
 
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.RectF
+import android.graphics.Typeface
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
+import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -16,222 +16,266 @@ import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
-import com.wts.smartscore.BuildConfig
+import com.google.android.material.card.MaterialCardView
+import com.wts.smartscore.R
 import com.wts.smartscore.data.BroadsheetEntity
 import com.wts.smartscore.data.ScanEntity
 import com.wts.smartscore.data.SheetSideEntity
 import com.wts.smartscore.data.SmartScoreDatabase
-import com.wts.smartscore.scanner.*
+import com.wts.smartscore.scanner.LocalProcessingQueue
+import com.wts.smartscore.scanner.ProcessingTaskTypes
+import com.wts.smartscore.scanner.MlKitDocumentScan
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
 import java.util.UUID
-import java.util.concurrent.Executors
 
-/** Google Quick/Batch scanning path backed by the flexible page manifest. */
+/** Capture only. Recognition is durable, local background work after this screen. */
 class BroadsheetScannerActivity : AppCompatActivity() {
-    companion object {
-        private const val TAG = "SmartScoreBroadsheet"
-        const val EXTRA_BATCH_SCAN = "batch_scan"
-    }
-
-    private data class Candidate(val scanPageNumber: Int, val imagePath: String, val pageId: String?, val method: String, val identity: SheetPageIdentity? = null)
-    private data class Processed(val page: SheetPageTemplate, val scanId: String, val sourcePath: String, val canonicalPath: String, val readings: List<com.wts.smartscore.data.ScoreReadingEntity>, val processingMs: Long, val identityMethod: String)
-
-    private lateinit var status: TextView
-    private lateinit var scanButton: Button
-    private val batchMode by lazy { intent.getBooleanExtra(EXTRA_BATCH_SCAN, false) || intent.getBooleanExtra("batch_scan", false) }
-    private val scanner by lazy { MlKitDocumentScan.client(50) }
     private val dao by lazy { SmartScoreDatabase.get(this).dao() }
-    private val repo by lazy { V2TemplateRepository(this) }
-    private val exec = Executors.newSingleThreadExecutor()
+    private val scanner by lazy { MlKitDocumentScan.client(50) }
+    private var sessionId: String = ""
+    private lateinit var status: TextView
+    private lateinit var identitySummary: TextView
+    private lateinit var pageList: LinearLayout
+    private lateinit var addPageButton: Button
+    private lateinit var doneButton: Button
 
     private val launcher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         if (result.resultCode != Activity.RESULT_OK) {
-            status.text = "Scan cancelled — saved pages are unchanged"
-            scanButton.isEnabled = true
+            status.text = "Scan cancelled. Any saved pages are still safe."
+            addPageButton.isEnabled = true
             return@registerForActivityResult
         }
-        runCatching {
-            val document = GmsDocumentScanningResult.fromActivityResultIntent(result.data) ?: error("Scanner returned no pages")
-            status.text = "Preparing scanned broadsheet…"
-            scanButton.isEnabled = false
-            val scan = MlKitDocumentScan.persistResult(this, document, File(filesDir, "broadsheets/mlkit-scans"))
-            identifyPages(scan.pages.map { it.pageNumber to it.imagePath })
-        }.onFailure {
-            Log.e(TAG, "ML Kit broadsheet result failed", it)
-            status.text = "Unable to use this scan. Tap Scan Broadsheet to try again."
-            scanButton.isEnabled = true
+        val document = runCatching { GmsDocumentScanningResult.fromActivityResultIntent(result.data) }.getOrNull()
+        if (document == null) {
+            status.text = "The scanner returned no page. Try again when ready."
+            addPageButton.isEnabled = true
+            return@registerForActivityResult
         }
+        saveScan(document)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(22, 28, 22, 22) }
-        root.addView(TextView(this).apply { text = "Smart Broadsheet"; textSize = 26f; setPadding(0, 0, 0, 6) })
+        sessionId = savedInstanceState?.getString("session_id")
+            ?: intent.getStringExtra("session_id")
+            ?: UUID.randomUUID().toString()
+        buildUi()
+        lifecycleScope.launch {
+            renderOverview()
+            if (savedInstanceState == null && dao.pages(sessionId).isEmpty()) startScan()
+        }
+    }
+
+    private fun buildUi() {
+        val background = ContextCompat.getColor(this, R.color.smartscore_background)
+        val text = ContextCompat.getColor(this, R.color.smartscore_text)
+        val muted = ContextCompat.getColor(this, R.color.smartscore_text_muted)
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(24), dp(18), dp(28))
+            setBackgroundColor(background)
+        }
         root.addView(TextView(this).apply {
-            text = if (batchMode) {
-                "Batch Scan uses Google's multipage document scanner. Capture every broadsheet page, then SmartScore identifies and groups them after you finish."
-            } else {
-                "Quick Scan uses Google's document review flow. SmartScore identifies each captured page after scanning, then maps it to the generated template."
-            }
-            textSize = 14f; setPadding(0, 0, 0, 22)
+            text = "SMART BROADSHEET"
+            textSize = 12f
+            letterSpacing = 0.12f
+            setTextColor(muted)
         })
-        status = TextView(this).apply { text = "Ready to scan"; gravity = Gravity.CENTER; textSize = 16f; setPadding(12, 18, 12, 18) }
+        root.addView(TextView(this).apply {
+            text = "Scan a sheet"
+            textSize = 28f
+            setTextColor(text)
+            setTypeface(typeface, Typeface.BOLD)
+            setPadding(0, dp(5), 0, dp(3))
+        })
+        root.addView(TextView(this).apply {
+            text = "Google Scan cleans each page first. SmartScore saves it immediately, then reads and organises it in the background."
+            textSize = 14f
+            setTextColor(muted)
+            setPadding(0, 0, 0, dp(16))
+        })
+        identitySummary = TextView(this).apply {
+            text = "Identity will be detected when possible"
+            textSize = 15f
+            setTextColor(text)
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            setBackgroundColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_surface))
+        }
+        root.addView(identitySummary, LinearLayout.LayoutParams(-1, ViewGroup.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) })
+        status = TextView(this).apply {
+            text = "Ready to scan"
+            textSize = 14f
+            gravity = Gravity.CENTER
+            setTextColor(muted)
+            setPadding(0, dp(8), 0, dp(12))
+        }
         root.addView(status)
-        scanButton = Button(this).apply { text = if (batchMode) "START BATCH SCAN" else "SCAN BROADSHEET"; setOnClickListener { startScan() } }
-        root.addView(scanButton)
-        root.addView(TextView(this).apply { text = "QR identifies a page when available. If QR fails, the image is retained and identity is resolved from page order/template evidence after capture."; textSize = 13f; setPadding(0, 18, 0, 0) })
+        addPageButton = Button(this).apply {
+            text = "+  ADD PAGE"
+            setOnClickListener { startScan() }
+        }
+        root.addView(addPageButton)
+        pageList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        root.addView(pageList)
+        doneButton = Button(this).apply {
+            text = "DONE"
+            setOnClickListener { finishToRecords() }
+        }
+        root.addView(doneButton, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(16) })
+        root.addView(TextView(this).apply {
+            text = "Saved locally • processing continues after you leave this screen"
+            textSize = 12f
+            gravity = Gravity.CENTER
+            setTextColor(muted)
+            setPadding(0, dp(12), 0, 0)
+        })
         setContentView(ScrollView(this).apply { addView(root) })
-        lifecycleScope.launch { refreshSavedState() }
-        if (savedInstanceState == null) startScan()
     }
 
     private fun startScan() {
-        status.text = "Opening document scanner…"
-        scanButton.isEnabled = false
+        addPageButton.isEnabled = false
+        status.text = "Opening Google document scanner…"
         scanner.getStartScanIntent(this)
             .addOnSuccessListener { sender -> launcher.launch(IntentSenderRequest.Builder(sender).build()) }
-            .addOnFailureListener { error -> status.text = "Document scanner unavailable: ${error.message ?: error.javaClass.simpleName}"; scanButton.isEnabled = true }
+            .addOnFailureListener { error ->
+                status.text = "Document scanner unavailable: ${error.message ?: error.javaClass.simpleName}"
+                addPageButton.isEnabled = true
+            }
     }
 
-    private fun identifyPages(pages: List<Pair<Int, String>>) {
-        exec.execute {
-            val candidates = pages.map { (number, path) ->
-                val bitmap = BitmapFactory.decodeFile(path)
-                val identity = try { if (bitmap != null) SheetIdentityResolver.resolvePageIdentity(bitmap) else null } catch (t: Throwable) { Log.w(TAG, "QR identity unavailable", t); null } finally { bitmap?.recycle() }
-                val ocr = runCatching { ScriptIdentityExtractor.extractText(this, path) }.getOrDefault("")
-                val qrPage = identity?.let(repo::pageForIdentity)
-                val ocrPageId = Regex("(?i)((?:WTS|SMB)-[A-Z0-9-]+)-(?:P|S)([0-9]+)").find(ocr)?.let {
-                    "${it.groupValues[1].uppercase()}-P${it.groupValues[2]}"
+    private fun saveScan(document: GmsDocumentScanningResult) {
+        addPageButton.isEnabled = false
+        doneButton.isEnabled = false
+        status.text = "Saving corrected pages locally…"
+        lifecycleScope.launch {
+            runCatching {
+                val scan = withContext(Dispatchers.IO) {
+                    MlKitDocumentScan.persistResult(this@BroadsheetScannerActivity, document, File(filesDir, "broadsheets/sessions/$sessionId"))
                 }
-                val ocrPage = ocrPageId?.let(repo::pageById)
-                val orderedPage = qrPage ?: ocrPage ?: pageFromPrintedHeading(ocr, number, pages.size)
-                Candidate(number, path, orderedPage?.pageId, when {
-                    qrPage != null -> "QUICK_SCAN_QR"
-                    ocrPage != null -> "QUICK_SCAN_OCR_ID"
-                    orderedPage != null -> "QUICK_SCAN_TEMPLATE_FALLBACK"
-                    else -> "QUICK_SCAN_IDENTITY_UNCERTAIN"
-                }, identity)
-            }
-            runOnUiThread { processCandidates(candidates) }
-        }
-    }
-
-    private fun pageFromPrintedHeading(text: String, scanNumber: Int, scannedCount: Int): SheetPageTemplate? {
-        val upper = text.uppercase()
-        val manifest = repo.allManifests().firstOrNull { candidate ->
-            upper.contains(candidate.sheetId.uppercase()) ||
-                (upper.contains(candidate.classLabel.uppercase()) && upper.contains(candidate.subjectGroup.uppercase().split(" • ").first()))
-        } ?: return null
-        val pageNumber = Regex("(?i)(?:PAGE|P|S)\\s*([0-9]+)").find(text)?.groupValues?.getOrNull(1)?.toIntOrNull()
-        return when {
-            pageNumber != null -> manifest.pageByNumber(pageNumber)
-            scannedCount == manifest.pages.size -> manifest.pageByNumber(scanNumber)
-            manifest.pages.size == 1 -> manifest.pages.first()
-            else -> null
-        }
-    }
-
-    private fun processCandidates(candidates: List<Candidate>) {
-        status.text = "Reading scores…"
-        scanButton.isEnabled = false
-        exec.execute {
-            val known = candidates.mapNotNull { candidate -> candidate.pageId?.let(repo::pageById)?.let { candidate to it } }
-            val unknown = candidates.filter { it.pageId == null }
-            if (known.isEmpty()) {
-                val file = File(filesDir, "broadsheets/uncertain-pages/${System.currentTimeMillis()}.json").apply { parentFile?.mkdirs() }
-                file.writeText("{\"pages\":${unknown.joinToString(prefix = "[", postfix = "]") { "{\"page_number\":${it.scanPageNumber},\"image\":\"${it.imagePath.replace("\\", "\\\\")}\"}" }}}")
-                runOnUiThread { status.text = "${unknown.size} page(s) saved — identity needs review"; scanButton.isEnabled = true }
-                return@execute
-            }
-            val cv = OpenCvRuntime.initialize(this)
-            if (cv.state != OpenCvRuntime.State.OPENCV_READY) {
-                runOnUiThread { status.text = "The pages were saved, but score processing is unavailable"; scanButton.isEnabled = true }
-                return@execute
-            }
-            val processed = mutableListOf<Processed>()
-            try {
-                known.forEach { (candidate, page) ->
-                    val source = BitmapFactory.decodeFile(candidate.imagePath) ?: error("Scanned page could not be opened")
-                    // Keep the ML Kit corrected JPEG at its native resolution whenever
-                    // practical; the primary layout deliberately contains smaller cells.
-                    val scale = minOf(1f, 3200f / maxOf(source.width, source.height).toFloat())
-                    val targetWidth = (source.width * scale).toInt().coerceAtLeast(2)
-                    val targetHeight = (source.height * scale).toInt().coerceAtLeast(2)
-                    val canonical: Bitmap = if (targetWidth == source.width && targetHeight == source.height) source else Bitmap.createScaledBitmap(source, targetWidth, targetHeight, true)
-                    if (canonical !== source) source.recycle()
-                    val registrationQrBounds = candidate.identity?.qrBounds?.let { bounds ->
-                        RectF(bounds.left * scale, bounds.top * scale, bounds.right * scale, bounds.bottom * scale)
+                withContext(Dispatchers.IO) {
+                    val existing = dao.pages(sessionId)
+                    var next = existing.maxOfOrNull { it.sideNumber }?.plus(1) ?: 1
+                    val now = System.currentTimeMillis()
+                    scan.pages.forEach { page ->
+                        val pageId = "$sessionId-page-${next.toString().padStart(3, '0')}"
+                        val side = SheetSideEntity(
+                            sideId = pageId,
+                            sheetId = sessionId,
+                            sideNumber = next,
+                            totalSides = 0,
+                            rowStart = 0,
+                            rowEnd = 0,
+                            scanTimestamp = now,
+                            imagePath = page.imagePath,
+                            normalizedPath = page.imagePath,
+                            identityMethod = "PENDING",
+                            layoutId = "PENDING",
+                            subjectGroup = null,
+                            templateVersion = null,
+                            pageState = "SCANNED",
+                            identityConfidence = 0.0,
+                            identityJson = null,
+                            sessionId = sessionId
+                        )
+                        dao.saveSide(side)
+                        dao.saveScan(ScanEntity("$pageId-scan", sessionId, "SMART_BROADSHEET", next, now, page.imagePath, page.imagePath, "{\"source\":\"GOOGLE_ML_KIT_DOCUMENT_SCANNER\"}"))
+                        val payload = JSONObject().put("page_id", pageId)
+                        LocalProcessingQueue.enqueue(this@BroadsheetScannerActivity, ProcessingTaskTypes.IDENTIFY_DOCUMENT, sessionId, payload)
+                        LocalProcessingQueue.enqueue(this@BroadsheetScannerActivity, ProcessingTaskTypes.REGISTER_TEMPLATE, sessionId, payload)
+                        LocalProcessingQueue.enqueue(this@BroadsheetScannerActivity, ProcessingTaskTypes.READ_SCORES, sessionId, payload)
+                        next++
                     }
-                    val canonicalFile = File(filesDir, "broadsheets/canonical/${page.pageId}-${System.currentTimeMillis()}.jpg")
-                    ImageProcessor.saveJpeg(canonical, canonicalFile)
-                    val scanId = UUID.randomUUID().toString()
-                    val started = System.currentTimeMillis()
-                    val debugDirectory = if (BuildConfig.DEBUG) {
-                        File(filesDir, "broadsheets/debug/${page.pageId}-${candidate.scanPageNumber}-${System.currentTimeMillis()}").apply { mkdirs() }
-                    } else null
-                    val readings = BroadsheetProcessor(this).process(
-                        canonical,
-                        page,
-                        scanId,
-                        debugDirectory,
-                        candidate.imagePath,
-                        registrationQrBounds
+                    val sheet = dao.broadsheet(sessionId) ?: BroadsheetEntity(
+                        sheetId = sessionId,
+                        classLabel = "Broadsheet",
+                        subject = "Identity pending",
+                        templateVersion = "",
+                        expectedPageCount = 0,
+                        reviewStatus = "SCANNED",
+                        createdAt = now,
+                        layoutFamily = "GENERIC_SCORE_SHEET",
+                        documentType = "GENERIC_SCORE_SHEET",
+                        pageCount = dao.pages(sessionId).size,
+                        lastUpdatedAt = now
                     )
-                    processed += Processed(page, scanId, candidate.imagePath, canonicalFile.absolutePath, readings, System.currentTimeMillis() - started, candidate.method)
-                    canonical.recycle()
+                    dao.saveBroadsheet(sheet.copy(reviewStatus = "SCANNED", pageCount = dao.pages(sessionId).size, lastUpdatedAt = now))
                 }
-            } catch (t: Throwable) {
-                Log.e(TAG, "broadsheet processing failed", t)
-                runOnUiThread { status.text = "The pages were scanned, but score reading failed"; scanButton.isEnabled = true }
-                return@execute
-            }
-            runOnUiThread {
-                lifecycleScope.launch {
-                    try {
-                        processed.forEach { result ->
-                            val template = repo.manifestFor(result.page.sheetId)
-                            val manifestPath = template?.let {
-                                File(filesDir, "broadsheets/templates/${it.sheetId}.json").apply { parentFile?.mkdirs(); writeText(it.toJson().toString(2)) }.absolutePath
-                            }
-                            dao.saveBroadsheet(BroadsheetEntity(result.page.sheetId, template?.classLabel ?: "Unknown class", template?.subjectGroup ?: result.page.subjectGroup ?: "Unknown subject", template?.templateVersion ?: result.page.templateVersion, template?.expectedPageIds?.size ?: 0, "REVIEW_REQUIRED", System.currentTimeMillis(), "LOCAL_ONLY", result.page.layoutFamily, manifestPath))
-                            dao.deleteReadingsForSide(result.page.pageId)
-                            dao.saveSide(SheetSideEntity(result.page.pageId, result.page.sheetId, result.page.pageNumber, result.page.totalSides, result.page.rowStart, result.page.rowEnd, System.currentTimeMillis(), result.sourcePath, result.canonicalPath, result.identityMethod, result.page.layoutId, result.page.subjectGroup, result.page.templateVersion))
-                            dao.saveScan(ScanEntity(result.scanId, result.page.pageId, "SMART_BROADSHEET", result.page.pageNumber, System.currentTimeMillis(), result.sourcePath, result.canonicalPath, "{\"processing_ms\":${result.processingMs},\"layout_id\":\"${result.page.layoutId}\"}"))
-                            dao.saveReadings(result.readings)
-                        }
-                        val manifest = repo.manifestFor(processed.first().page.sheetId)
-                        val saved = dao.pages(processed.first().page.sheetId).map { it.sideId }.toSet()
-                        status.text = when {
-                            unknown.isNotEmpty() -> "${processed.size} page(s) processed; ${unknown.size} need identity review"
-                            manifest?.isComplete(saved) == true -> "Broadsheet complete ✓ — opening review"
-                            else -> "${saved.size} page(s) saved — more may be required"
-                        }
-                        scanButton.isEnabled = true
-                        if (unknown.isEmpty()) startActivity(Intent(this@BroadsheetScannerActivity, BroadsheetReviewActivity::class.java).putExtra("sheetId", processed.first().page.sheetId))
-                    } catch (t: Throwable) {
-                        Log.e(TAG, "broadsheet local save failed", t)
-                        status.text = "The scan was processed but could not be saved"
-                        scanButton.isEnabled = true
-                    }
-                }
+            }.onSuccess {
+                status.text = "Saved locally ✓  •  ready for another page"
+                doneButton.isEnabled = true
+                addPageButton.isEnabled = true
+                renderOverview()
+            }.onFailure { error ->
+                status.text = "Page was not added: ${error.message ?: error.javaClass.simpleName}"
+                doneButton.isEnabled = true
+                addPageButton.isEnabled = true
             }
         }
     }
 
-    private suspend fun refreshSavedState() {
-        val pages = dao.pages(repo.sheetId)
-        val expected = repo.currentManifest().expectedPageIds
-        status.text = when {
-            pages.isEmpty() -> "Ready to scan a broadsheet page"
-            expected == null -> "${pages.size} page(s) saved — page count is dynamic"
-            repo.currentManifest().isComplete(pages.map { it.sideId }.toSet()) -> "All ${expected.size} expected page(s) are saved"
-            else -> "${pages.size} page(s) saved — ${repo.currentManifest().missingPageIds(pages.map { it.sideId }.toSet()).size} page(s) may be missing"
+    private fun renderOverview() {
+        lifecycleScope.launch {
+            val sheet = withContext(Dispatchers.IO) { dao.broadsheet(sessionId) }
+            val pages = withContext(Dispatchers.IO) { dao.pages(sessionId) }
+            val title = listOf(sheet?.classLabel, sheet?.subject).orEmpty().filter { !it.isNullOrBlank() && it !in listOf("Broadsheet", "Identity pending") }.joinToString(" • ")
+            identitySummary.text = if (title.isBlank()) "Identity will be detected when possible" else title
+            pageList.removeAllViews()
+            pages.forEach { page -> pageList.addView(pageCard(page)) }
+            doneButton.isEnabled = pages.isNotEmpty()
+            status.text = if (pages.isEmpty()) "Ready to scan" else "${pages.size} page${if (pages.size == 1) "" else "s"} saved locally"
         }
-        scanButton.isEnabled = true
     }
 
-    override fun onDestroy() { super.onDestroy(); exec.shutdown() }
+    private fun pageCard(page: SheetSideEntity): MaterialCardView {
+        val card = MaterialCardView(this).apply {
+            radius = dp(18).toFloat()
+            strokeWidth = 1
+            strokeColor = ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_border)
+            setCardBackgroundColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_surface))
+            setContentPadding(dp(10), dp(10), dp(10), dp(10))
+            layoutParams = LinearLayout.LayoutParams(-1, dp(142)).apply { bottomMargin = dp(10) }
+        }
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        row.addView(ImageView(this).apply {
+            setImageBitmap(BitmapFactory.decodeFile(page.normalizedPath ?: page.imagePath))
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }, LinearLayout.LayoutParams(dp(92), dp(118)))
+        val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(14), 0, 0, 0) }
+        labels.addView(TextView(this).apply { text = "Page ${page.sideNumber}"; textSize = 17f; setTypeface(typeface, Typeface.BOLD); setTextColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_text)) })
+        labels.addView(TextView(this).apply { text = pageStateLabel(page.pageState); textSize = 14f; setTextColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_text_muted)); setPadding(0, dp(5), 0, 0) })
+        labels.addView(TextView(this).apply { text = "Saved locally"; textSize = 12f; setTextColor(ContextCompat.getColor(this@BroadsheetScannerActivity, R.color.smartscore_text_muted)); setPadding(0, dp(8), 0, 0) })
+        row.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
+        card.addView(row)
+        return card
+    }
+
+    private fun pageStateLabel(state: String): String = when (state) {
+        "SCANNED" -> "Waiting to process"
+        "PROCESSING" -> "Processing"
+        "READY" -> "Ready"
+        "REVIEW_REQUIRED" -> "Needs review"
+        "UNIDENTIFIED" -> "Identity uncertain"
+        "FAILED" -> "Processing failed"
+        else -> "Saved"
+    }
+
+    private fun finishToRecords() {
+        LocalProcessingQueue.schedule(this)
+        startActivity(Intent(this, RecordsActivity::class.java))
+        finish()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("session_id", sessionId)
+        super.onSaveInstanceState(outState)
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 }

@@ -62,11 +62,7 @@ class GeneralScannerActivity : AppCompatActivity() {
         }
         root.addView(TextView(this).apply { text = "Document Scanner"; textSize = 26f })
         root.addView(TextView(this).apply {
-            text = if (batchMode) {
-                "Batch Scan uses Google's multipage document scanner. Capture the whole stack, then review the corrected pages and exports together."
-            } else {
-                "Scan ordinary documents to clean corrected pages and a multipage PDF."
-            }
+            text = "Google Scan supports one or more ordinary documents. Review the corrected pages inside the scanner, then save exports locally."
             textSize = 14f
             setPadding(0, 6, 0, 18)
         })
@@ -77,7 +73,7 @@ class GeneralScannerActivity : AppCompatActivity() {
             setPadding(0, 18, 0, 18)
         }
         root.addView(status)
-        root.addView(Button(this).apply { text = if (batchMode) "START BATCH SCAN" else "SCAN DOCUMENT"; setOnClickListener { startScan() } })
+        root.addView(Button(this).apply { text = "SCAN DOCUMENT"; setOnClickListener { startScan() } })
         thumbs = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         root.addView(HorizontalScrollView(this).apply { addView(thumbs) }, LinearLayout.LayoutParams(-1, 220))
         openPdf = Button(this).apply {

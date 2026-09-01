@@ -9,11 +9,11 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.card.MaterialCardView
 import com.wts.smartscore.R
+import com.wts.smartscore.scanner.LocalProcessingQueue
 
 class MainActivity : AppCompatActivity() {
     private val cameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         showHome()
+        LocalProcessingQueue.schedule(this)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) cameraPermission.launch(Manifest.permission.CAMERA)
     }
 
@@ -35,9 +36,9 @@ class MainActivity : AppCompatActivity() {
         root.addView(TextView(this).apply { this.text = "WTS SMARTSCORE"; textSize = 29f; setTextColor(text); setTypeface(typeface, Typeface.BOLD) })
         root.addView(TextView(this).apply { this.text = "Smart Scanning • Score Capture • Script Digitization"; textSize = 14f; setTextColor(muted); setPadding(0, 6, 0, 24) })
         root.addView(section("SCAN & DIGITIZE"))
-        root.addView(productCard("▦", "Smart Broadsheet", "Quick Scan • Batch Scan", primary) { chooseScanMode("Smart Broadsheet", "Quick Scan", "Batch Scan", BroadsheetScannerActivity::class.java) })
-        root.addView(productCard("▤", "Script Scanner", "Single Script • Batch Scan", accent) { chooseScanMode("Script Scanner", "Single Script", "Batch Scan", ScriptScannerActivity::class.java) })
-        root.addView(productCard("▧", "Document Scanner", "Normal Scan • Batch Scan", primary) { chooseScanMode("Document Scanner", "Normal Scan", "Batch Scan", GeneralScannerActivity::class.java) })
+        root.addView(productCard("▦", "Smart Broadsheet", "Scan pages • process later", primary) { startActivity(Intent(this, BroadsheetScannerActivity::class.java)) })
+        root.addView(productCard("▤", "Script Scanner", "Scan a pile • group students later", accent) { startActivity(Intent(this, ScriptScannerActivity::class.java)) })
+        root.addView(productCard("▧", "Document Scanner", "Clean pages • export later", primary) { startActivity(Intent(this, GeneralScannerActivity::class.java)) })
         root.addView(productCard("✦", "AI Workspace", "Prepare or mark digitized scripts", accent) { startActivity(Intent(this, AiMarkerActivity::class.java)) })
 
         root.addView(section("RECORDS").apply { setPadding(0, 18, 0, 10) })
@@ -46,17 +47,6 @@ class MainActivity : AppCompatActivity() {
         })
         root.addView(TextView(this).apply { this.text = "Private workspace • Local-first scanning"; textSize = 12f; gravity = Gravity.CENTER; setTextColor(muted); setPadding(0, 28, 0, 4) })
         setContentView(ScrollView(this).apply { addView(root) })
-    }
-
-    private fun chooseScanMode(title: String, singleLabel: String, batchLabel: String, activity: Class<*>) {
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setItems(arrayOf(singleLabel, batchLabel)) { _, which ->
-                startActivity(Intent(this, activity).apply {
-                    putExtra("batch_scan", which == 1)
-                })
-            }
-            .show()
     }
 
     private fun section(label: String) = TextView(this).apply { text = label; textSize = 12f; setTextColor(ContextCompat.getColor(this@MainActivity, R.color.smartscore_text_muted)); setTypeface(typeface, Typeface.BOLD); letterSpacing = 0.08f; setPadding(2, 0, 0, 10) }

@@ -6,7 +6,7 @@ SmartScore is a local-first scanning and review client. The Result Portal remain
 
 ## Google-backed scanner paths
 
-Quick/Normal Scan keeps the Google ML Kit Document Scanner flow for one-to-few pages: boundary guidance, capture, crop, enhancement, multipage review, PDF and JPEG output. Batch Scan uses the same scanner with a 50-page session limit and defers SmartScore identity/template processing until the Google result returns.
+Quick/Normal Scan keeps the Google ML Kit Document Scanner flow: boundary guidance, capture, perspective correction and JPEG/PDF output. Broadsheet capture is an open-ended local session; each returned corrected page is persisted before any recognition. Script capture uses one 50-page Google multipage session and defers grouping until the full result returns.
 
 The rejected CameraX/OpenCV Continuous Scan implementation is retained only as an internal experimental/debug path. It is not linked from the primary home workflow and is not a V1 acquisition guarantee.
 
@@ -17,11 +17,13 @@ The rejected CameraX/OpenCV Continuous Scan implementation is retained only as a
 
 Supported local test layout families include `SECONDARY_SINGLE_SUBJECT` and `PRIMARY_MULTI_SUBJECT`; the latter places four subject groups and separate CA/Exam ROIs on one physical page. QR is compact identity metadata in the top-centre header zone. QR failure retains the high-resolution page and falls back to OCR/template evidence.
 
-Broadsheet processing is: corrected master page → template lookup → high-resolution ROI extraction → border/blank checks and recognition → `CONFIRMED`, `REVIEW_REQUIRED`, `INVALID`, `BLANK`, `UNREADABLE` or `MANUALLY_CORRECTED`. Student names come from the template rows rather than score-cell OCR.
+Broadsheet processing is: corrected master page → optional QR/heading identity evidence → template registration when available → high-resolution ROI extraction → border/blank checks → per-digit recognition → score assembly and range validation. Student names come from the template rows rather than score-cell OCR. Generic pages remain saved and are surfaced as identity exceptions.
+
+Room exposes document states `SCANNED`, `PROCESSING`, `READY`, `REVIEW_REQUIRED`, `UNIDENTIFIED` and `FAILED`. These are user-facing workflow states; implementation details such as manifest IDs are kept out of the normal Records UI.
 
 ## Post-scan session and scripts
 
-The session manifest is the transaction. After Finish it exposes page thumbnails and post-capture delete, rotate, crop, reorder, inspect, add/rescan and process actions. Broadsheet pages are grouped by `sheet_id`/`page_id`; scripts are grouped by strong cover evidence and attach continuation pages to the current script. A random name in an answer is not sufficient to start a new script. Scripts have no QR dependency.
+The corrected image is the transaction. Broadsheet Overview shows saved thumbnails and lets the operator add pages or finish; it never requires OCR success. Script pages are grouped by `NEW_SCRIPT_START`, `CONTINUATION_PAGE` or `UNCERTAIN_BOUNDARY` using printed cover labels and field-based identity evidence. Scripts have no QR dependency and do not show a mandatory identity dialog after every capture.
 
 ## Export boundary
 

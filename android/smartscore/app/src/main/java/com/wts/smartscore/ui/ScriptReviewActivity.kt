@@ -47,10 +47,17 @@ class ScriptReviewActivity : AppCompatActivity() {
             })
 
             val topActions = LinearLayout(this@ScriptReviewActivity).apply { orientation = LinearLayout.HORIZONTAL }
-            topActions.addView(Button(this@ScriptReviewActivity).apply {
-                text = "CORRECT IDENTITY"
-                setOnClickListener { editIdentity(script) }
-            }, LinearLayout.LayoutParams(0, -2, 1f))
+            if (!script.identityStatus.equals("CONFIDENT", true) || script.studentRef.isNullOrBlank()) {
+                topActions.addView(Button(this@ScriptReviewActivity).apply {
+                    text = "REVIEW IDENTITY"
+                    setOnClickListener { editIdentity(script) }
+                }, LinearLayout.LayoutParams(0, -2, 1f))
+            } else {
+                topActions.addView(TextView(this@ScriptReviewActivity).apply {
+                    text = "Identity detected automatically"
+                    setPadding(8, 12, 8, 12)
+                }, LinearLayout.LayoutParams(0, -2, 1f))
+            }
             topActions.addView(Button(this@ScriptReviewActivity).apply {
                 text = "MERGE SCRIPT"
                 setOnClickListener { chooseMergeTarget(script) }
@@ -126,7 +133,9 @@ class ScriptReviewActivity : AppCompatActivity() {
                     dao.saveScript(script.copy(
                         studentRef = student.text.toString().trim().ifBlank { null },
                         subject = subject.text.toString().trim().ifBlank { null },
-                        testRef = context.text.toString().trim().ifBlank { null }
+                        testRef = context.text.toString().trim().ifBlank { null },
+                        identityStatus = if (student.text.toString().trim().isBlank()) "NEEDS_REVIEW" else "CONFIDENT",
+                        identityConfidence = if (student.text.toString().trim().isBlank()) 0.0 else 1.0
                     ))
                     load()
                 }

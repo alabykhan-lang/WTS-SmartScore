@@ -131,7 +131,9 @@ class BroadsheetProcessor(private val context: Context) {
                         confidence = assembly.confidence,
                         state = assembly.state,
                         cropPath = scoreSourcePath,
-                        reviewedAt = null
+                        reviewedAt = null,
+                        recognizedText = displayText(observations, assembly),
+                        digitDetailsJson = digitDetails(observations)
                     )
                     diagnostics.put(roiDiagnostic(row, roi, side, scoreRect, scorePrepared, scoreSourcePath, scorePreprocessedPath, observations, assembly, registration))
                     scorePrepared?.bitmap?.recycle()
@@ -166,6 +168,33 @@ class BroadsheetProcessor(private val context: Context) {
             textRecognizer.close()
         }
     }
+
+    private fun displayText(observations: List<DigitObservation>, assembly: ScoreAssembly): String {
+        if (assembly.state == "BLANK") return "—"
+        return observations.sortedBy { it.index }.joinToString("") { observation ->
+            when {
+                observation.blank -> "?"
+                observation.value != null -> observation.value.toString()
+                else -> "?"
+            }
+        }.ifBlank { "?" }
+    }
+
+    private fun digitDetails(observations: List<DigitObservation>): String = JSONArray().apply {
+        observations.sortedBy { it.index }.forEach { observation ->
+            put(JSONObject().apply {
+                put("index", observation.index)
+                put("value", observation.value ?: JSONObject.NULL)
+                put("confidence", observation.confidence)
+                put("blank", observation.blank)
+                put("source_path", observation.sourcePath ?: JSONObject.NULL)
+                put("preprocessed_path", observation.preprocessedPath ?: JSONObject.NULL)
+                put("engine", observation.recognizerEngine)
+                put("raw_text", observation.rawOcrText)
+                put("normalized_text", observation.normalizedOcrText)
+            })
+        }
+    }.toString()
 
     private fun recognizeDigit(
         bitmap: Bitmap,

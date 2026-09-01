@@ -18,7 +18,7 @@ import kotlin.math.exp
  * from digit 0 through digit 9. Until that asset is supplied, ML Kit remains
  * the explicit fallback so scans are still reviewable.
  */
-class TfliteDigitRecognizer private constructor(
+class TfliteHandwrittenDigitRecognizer private constructor(
     private val interpreter: Interpreter
 ) : DigitRecognizer {
     override val engineName: String = "TFLITE_HANDWRITTEN_DIGIT"
@@ -69,14 +69,17 @@ class TfliteDigitRecognizer private constructor(
                         descriptor.startOffset,
                         descriptor.declaredLength
                     )
-                    TfliteDigitRecognizer(Interpreter(mapped))
+            TfliteHandwrittenDigitRecognizer(Interpreter(mapped))
                 }
             }
         }.getOrNull()
     }
 }
 
+/** Compatibility name for callers from the recovery build. */
+typealias TfliteDigitRecognizer = TfliteHandwrittenDigitRecognizer
+
 object DigitRecognizerFactory {
     fun create(context: Context, mlKitFallback: com.google.mlkit.vision.text.TextRecognizer): DigitRecognizer =
-        TfliteDigitRecognizer.tryCreate(context) ?: MlKitDigitRecognizer(mlKitFallback)
+        TfliteHandwrittenDigitRecognizer.tryCreate(context) ?: MlKitDigitRecognizer(mlKitFallback)
 }

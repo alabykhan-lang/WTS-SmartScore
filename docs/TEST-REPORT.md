@@ -13,8 +13,8 @@
 
 ## Runtime architecture checks
 
-- Quick/Normal Scan remains Google ML Kit Document Scanner; Batch Scan uses its multipage result and defers SmartScore processing until Finish.
-- Batch Scan uses the same Google multipage acquisition foundation as Quick Scan and defers processing until the scanner returns all corrected pages.
+- Quick/Normal Scan remains Google ML Kit Document Scanner. Broadsheet capture saves corrected pages immediately and defers SmartScore processing until after the operator taps Done.
+- Script capture uses the same Google multipage acquisition foundation and groups the returned page sequence after capture without an identity popup for every student.
 - The recovered physical V2 sheet is selected with its frozen legacy geometry and explicit coordinate origin; populated ink is not converted to BLANK when digit recognition fails.
 - The session manifest and review screen support dynamic page counts, post-capture page operations and template-driven broadsheet grouping.
 - Scripts have no QR dependency and preserve original/corrected pages alongside derived OCR.

@@ -173,7 +173,7 @@ class ContinuousSessionProcessor(
             pageNumber = null,
             subjectGroup = identity?.subject,
             identityMethod = if (identity != null) "OCR_LABELLED_FIELDS" else "OCR_UNAVAILABLE",
-            uncertain = classification.pageClass == "UNCERTAIN",
+            uncertain = classification.pageClass == ScriptPageClassifier.UNCERTAIN_BOUNDARY,
             boundaryReason = classification.reason,
             coverScore = classification.coverScore
         )
@@ -285,12 +285,12 @@ class ContinuousSessionProcessor(
             when {
                 current == null -> {
                     current = Group("$sessionId-SCRIPT-${groups.size + 1}").also { groups += it }
-                    current!!.uncertainBoundary = page.pageClass != "SCRIPT_COVER"
+                    current!!.uncertainBoundary = page.pageClass != ScriptPageClassifier.NEW_SCRIPT_START
                 }
-                page.pageClass == "SCRIPT_COVER" -> {
+                page.pageClass == ScriptPageClassifier.NEW_SCRIPT_START -> {
                     current = Group("$sessionId-SCRIPT-${groups.size + 1}").also { groups += it }
                 }
-                page.pageClass == "UNCERTAIN" -> current!!.uncertainBoundary = true
+                page.pageClass == ScriptPageClassifier.UNCERTAIN_BOUNDARY -> current!!.uncertainBoundary = true
             }
             current!!.pages += page
             if (current!!.identity == null && page.identity != null) current!!.identity = page.identity
