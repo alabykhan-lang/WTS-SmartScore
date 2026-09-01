@@ -134,17 +134,21 @@ object GenericTableDetector {
                     ?: fallbackRect(horizontalLines, verticalLines, analysis.cols(), analysis.rows())
                 if (candidate == null) return null
 
-                val localRows = boundedLines(horizontalLines, candidate.top, candidate.bottom, candidate.height, true)
-                val localColumns = boundedLines(verticalLines, candidate.left, candidate.right, candidate.width, false)
+                val candidateTop = candidate.y
+                val candidateBottom = candidate.y + candidate.height
+                val candidateLeft = candidate.x
+                val candidateRight = candidate.x + candidate.width
+                val localRows = boundedLines(horizontalLines, candidateTop, candidateBottom, candidate.height, true)
+                val localColumns = boundedLines(verticalLines, candidateLeft, candidateRight, candidate.width, false)
                 if (localRows.size < 3 || localColumns.size < 3) return null
 
                 val rowLines = localRows.map { (it / scale).roundToInt() }.distinct().sorted()
                 val columnLines = localColumns.map { (it / scale).roundToInt() }.distinct().sorted()
                 val tableRect = Rect(
-                    (candidate.left / scale).roundToInt().coerceIn(0, bitmap.width - 1),
-                    (candidate.top / scale).roundToInt().coerceIn(0, bitmap.height - 1),
-                    (candidate.right / scale).roundToInt().coerceIn(1, bitmap.width),
-                    (candidate.bottom / scale).roundToInt().coerceIn(1, bitmap.height)
+                    (candidateLeft / scale).roundToInt().coerceIn(0, bitmap.width - 1),
+                    (candidateTop / scale).roundToInt().coerceIn(0, bitmap.height - 1),
+                    (candidateRight / scale).roundToInt().coerceIn(1, bitmap.width),
+                    (candidateBottom / scale).roundToInt().coerceIn(1, bitmap.height)
                 )
                 val scoreColumns = chooseScoreColumns(columnLines)
                 if (scoreColumns.isEmpty()) return null
